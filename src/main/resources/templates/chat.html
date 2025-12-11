@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spring Chat App</title>
+    <style>
+        /* --- RESET & VARIABLES --- */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        :root {
+            --primary-color: #4a76a8;
+            --bg-color: #f0f2f5;
+            --white: #ffffff;
+            --gray-light: #e6e6e6;
+            --text-dark: #333;
+            --text-light: #888;
+            --green-msg: #dcf8c6;
+            --white-msg: #ffffff;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* --- CHAT SCREEN (MAIN APP) --- */
+        .chat-container {
+            display: flex; /* Hidden until login */
+            width: 90vw;
+            height: 90vh;
+            background: var(--white);
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            overflow: hidden;
+            display: flex; 
+            flex-direction: row;
+        }
+
+        /* SIDEBAR (Conversation List) */
+        .sidebar {
+            width: 30%;
+            border-right: 1px solid var(--gray-light);
+            display: flex;
+            flex-direction: column;
+            background-color: #fff;
+        }
+
+        .sidebar-header {
+            padding: 15px;
+            background-color: var(--primary-color);
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .search-bar {
+            padding: 10px;
+            border-bottom: 1px solid var(--gray-light);
+        }
+
+        .search-bar input {
+            width: 100%;
+            padding: 8px;
+            border-radius: 20px;
+            border: 1px solid #ddd;
+            outline: none;
+        }
+
+        .conversation-list {
+            list-style: none;
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        .conversation-item {
+            display: flex;
+            padding: 15px;
+            cursor: pointer;
+            border-bottom: 1px solid #f0f0f0;
+            transition: background 0.2s;
+        }
+
+        .conversation-item:hover, .conversation-item.active {
+            background-color: #f5f5f5;
+        }
+
+        .avatar {
+            width: 45px;
+            height: 45px;
+            background-color: #ddd;
+            border-radius: 50%;
+            margin-right: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: #555;
+        }
+
+        .conversation-info {
+            flex: 1;
+        }
+
+        .conversation-name {
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: var(--text-dark);
+        }
+
+        .last-message {
+            font-size: 0.85rem;
+            color: var(--text-light);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 180px;
+        }
+
+        /* MAIN CHAT AREA */
+        .chat-main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background-color: #e5ddd5; /* WhatsApp default bg color vibe */
+        }
+
+        .chat-header {
+            padding: 15px;
+            background-color: #f0f0f0;
+            border-bottom: 1px solid #ddd;
+            display: flex;
+            align-items: center;
+        }
+
+        .chat-header h3 {
+            margin-left: 15px;
+            color: var(--text-dark);
+        }
+
+        .messages-area {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        /* BUBBLES */
+        .message {
+            max-width: 60%;
+            padding: 10px 15px;
+            border-radius: 10px;
+            font-size: 0.95rem;
+            position: relative;
+            line-height: 1.4;
+            box-shadow: 0 1px 1px rgba(0,0,0,0.1);
+        }
+
+        .message.received {
+            align-self: flex-start;
+            background-color: var(--white-msg);
+            border-top-left-radius: 0;
+        }
+
+        .message.sent {
+            align-self: flex-end;
+            background-color: var(--green-msg);
+            border-top-right-radius: 0;
+        }
+
+        .message-meta {
+            display: block;
+            font-size: 0.7rem;
+            color: #999;
+            margin-top: 5px;
+            text-align: right;
+        }
+
+        /* INPUT AREA */
+        .chat-input-area {
+            padding: 15px;
+            background-color: #f0f0f0;
+            display: flex;
+            align-items: center;
+        }
+
+        .chat-input-area input {
+            flex: 1;
+            padding: 12px;
+            border-radius: 25px;
+            border: 1px solid #ddd;
+            outline: none;
+            margin-right: 10px;
+        }
+
+        .send-btn {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .logout-btn {
+            background-color: transparent;
+            border: 1px solid white;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            transition: background 0.2s;
+        }
+
+        .logout-btn:hover {
+            background-color: rgba(255, 255, 255, 0.2);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 2. MAIN CHAT INTERFACE -->
+    <div class="chat-container" id="chatScreen">
+        
+        <!-- Sidebar: Conversations -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <h3>My Chats</h3>
+                
+                <div>
+                    <form th:action="@{/logout}" method="post">
+                        <button type="submit" class="logout-btn">Logout</button>
+                    </form>
+                </div>
+            </div>
+            <div class="search-bar">
+                <input type="text" placeholder="Search chats...">
+            </div>
+            <ul class="conversation-list">
+                <!-- Static Item: Private Chat -->
+                <li class="conversation-item active">
+                    <div class="avatar">B</div>
+                    <div class="conversation-info">
+                        <div class="conversation-name">Bob Smith</div>
+                        <div class="last-message">See you tomorrow!</div>
+                    </div>
+                </li>
+                <!-- Static Item: Group Chat -->
+                <li class="conversation-item">
+                    <div class="avatar" style="background-color: #e57373; color: white;">G</div>
+                    <div class="conversation-info">
+                        <div class="conversation-name">Java Developers Group</div>
+                        <div class="last-message">Alice: Can someone help with JPA?</div>
+                    </div>
+                </li>
+            </ul>
+        </div>
+
+        <!-- Main Chat Area -->
+        <div class="chat-main">
+            <div class="chat-header">
+                <div class="avatar">B</div>
+                <div>
+                    <h3>Bob Smith</h3>
+                    <span style="font-size: 0.8rem; color: gray;">Online</span>
+                </div>
+            </div>
+
+            <div class="messages-area" id="messageArea">
+                <!-- Message Received -->
+                <div class="message received">
+                    Hey Alice! Did you fix that database error?
+                    <span class="message-meta">10:30 AM</span>
+                </div>
+
+                <!-- Message Sent -->
+                <div class="message sent">
+                    Yes! It was just a wrong password in application.properties. 😅
+                    <span class="message-meta">10:32 AM</span>
+                </div>
+                
+                <!-- Message Received -->
+                <div class="message received">
+                    Awesome, great job!
+                    <span class="message-meta">10:33 AM</span>
+                </div>
+            </div>
+
+            <div class="chat-input-area">
+                <input type="text" id="msgInput" placeholder="Type a message...">
+                <button class="send-btn" onclick="sendMessage()">➤</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- SIMPLE JS TO SWITCH SCREENS -->
+    <script>
+
+        // Simulate sending a message
+        function sendMessage() {
+            const input = document.getElementById('msgInput');
+            const area = document.getElementById('messageArea');
+            const text = input.value;
+
+            if(text.trim() === "") return;
+
+            // Create HTML for new message
+            const msgDiv = document.createElement('div');
+            msgDiv.classList.add('message', 'sent');
+            msgDiv.innerHTML = `
+                ${text}
+                <span class="message-meta">${new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+            `;
+
+            area.appendChild(msgDiv);
+            input.value = "";
+            
+            // Auto scroll to bottom
+            area.scrollTop = area.scrollHeight;
+        }
+
+        // Allow "Enter" key to send
+        document.getElementById('msgInput').addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+    </script>
+</body>
+</html>
