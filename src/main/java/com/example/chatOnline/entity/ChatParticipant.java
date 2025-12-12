@@ -1,4 +1,4 @@
-package com.example.time_tracker.entity;
+package com.example.chatOnline.entity;
 
 import java.time.LocalDateTime;
 

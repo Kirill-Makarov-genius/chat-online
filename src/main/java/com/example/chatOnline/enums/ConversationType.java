@@ -1,4 +1,4 @@
-package com.example.time_tracker.enums;
+package com.example.chatOnline.enums;
 
 public enum ConversationType {
     PRIVATE,

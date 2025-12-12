@@ -1,4 +1,4 @@
-package com.example.time_tracker;
+package com.example.chatOnline;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

@@ -1,4 +1,4 @@
-package com.example.time_tracker.service;
+package com.example.chatOnline.service;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -9,8 +9,10 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import com.example.time_tracker.entity.User;
-import com.example.time_tracker.repository.UserRepository;
+import com.example.chatOnline.dto.RegistrationFormDto;
+import com.example.chatOnline.entity.User;
+import com.example.chatOnline.exception.UserAlreadyExistsException;
+import com.example.chatOnline.repository.UserRepository;
 
 import lombok.RequiredArgsConstructor;
 
@@ -27,8 +29,16 @@ public class CustomUserDetailsService implements UserDetailsService {
             .orElseThrow(() -> new UsernameNotFoundException("User not found"));
     }
 
-    public void saveUser(User user){
-        user.setPassword(passwordEncoder.encode(user.getPassword()));
-        userRepository.save(user);
+    public void registerUser(RegistrationFormDto registrationFormDto){
+        if (userRepository.existsByUsername(registrationFormDto.getUsername())){
+            throw new UserAlreadyExistsException("User with this username already exists");
+        }
+        User newUser = User
+                .builder()
+                .username(registrationFormDto.getUsername())
+                .nickname(registrationFormDto.getNickname())
+                .password(passwordEncoder.encode(registrationFormDto.getPassword()))
+                .build();
+        userRepository.save(newUser);
     }
 }

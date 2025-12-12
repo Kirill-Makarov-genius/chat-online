@@ -1,10 +1,10 @@
-package com.example.time_tracker.entity;
+package com.example.chatOnline.entity;
 
 import java.time.LocalDateTime;
 
 import org.hibernate.annotations.CreationTimestamp;
 
-import com.example.time_tracker.enums.MessageStatus;
+import com.example.chatOnline.enums.MessageStatus;
 
 import jakarta.annotation.Generated;
 import jakarta.persistence.Column;

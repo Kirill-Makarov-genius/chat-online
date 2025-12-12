@@ -9,6 +9,7 @@
         .auth-container { background: white; padding: 2rem; border-radius: 10px; width: 350px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
         input { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ddd; border-radius: 5px; }
         .btn { width: 100%; padding: 10px; background: #4a76a8; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        span{ color: red}
     </style>
 </head>
 <body>
@@ -30,12 +31,15 @@
 
     <h3>Or Register</h3>
     <!-- REGISTER FORM -->
-    <form th:action="@{/register}" method="post">
-        <input type="text" name="username" placeholder="New Username" required>
-        <input type="nickname" name="nickname" placeholder="New Nickname" required>
-        <input type="password" name="password" placeholder="New Password" required>
+    <form th:action="@{/register}" method="post" th:object="${registrationFormDto}">
+        <input type="text" name="username" th:field="*{username}" placeholder="New Username" >
+        <span th:if="${#fields.hasErrors('username')}" th:errors="*{username}"></span>
+        <input type="text" name="nickname" th:field="*{nickname}" placeholder="New Nickname" >
+        <span th:if="${#fields.hasErrors('nickname')}" th:errors="*{nickname}"></span>
+        <input type="password" name="password" th:field="*{password}" placeholder="New Password">
+        <span th:if="${#fields.hasErrors('password')}" th:errors="*{password}"></span>
         <button type="submit" class="btn" style="background-color: #42b72a;">Create Account</button>
-        <div th:if="${param.registered}" style="color:green; margin-top:10px;">Success! Please login.</div>
+        <div th:if="${param.registered}" style="color:green; margin-top:10px;">Success! Please log in.</div>
     </form>
 </div>
 

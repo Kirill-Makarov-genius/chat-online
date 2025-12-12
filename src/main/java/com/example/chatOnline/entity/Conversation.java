@@ -1,11 +1,11 @@
-package com.example.time_tracker.entity;
+package com.example.chatOnline.entity;
 
 import java.time.LocalDateTime;
 import java.util.Set;
 
 import org.hibernate.annotations.CreationTimestamp;
 
-import com.example.time_tracker.enums.ConversationType;
+import com.example.chatOnline.enums.ConversationType;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -37,6 +37,9 @@ public class Conversation {
     
     @Column(nullable = true)
     private String conversationName;
+
+
+    private String lastMessage;
 
     @Enumerated(EnumType.STRING)
     private ConversationType conversationType;

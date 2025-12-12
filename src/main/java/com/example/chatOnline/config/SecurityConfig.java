@@ -1,4 +1,4 @@
-package com.example.time_tracker.config;
+package com.example.chatOnline.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
