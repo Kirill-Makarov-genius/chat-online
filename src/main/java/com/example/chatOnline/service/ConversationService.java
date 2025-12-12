@@ -58,7 +58,14 @@ public class ConversationService {
         message.setSender(sender);
         message.setStatus(MessageStatus.SENT);
         message.setSentAt(LocalDateTime.now());
-
+        if (message.getContent().length() > 90) {
+            conversation.setLastMessage(message.getContent().substring(0, 87)+"...");
+        }
+        else{
+            conversation.setLastMessage(message.getContent());
+        }
+        
+        conversationRepository.save(conversation);
         Message savedMessage = messageRepository.save(message);
 
         return messageMapper.toDto(savedMessage);

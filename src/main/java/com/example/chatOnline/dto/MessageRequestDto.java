@@ -1,7 +1,5 @@
 package com.example.chatOnline.dto;
 
-import com.example.chatOnline.entity.Conversation;
-import com.example.chatOnline.enums.MessageStatus;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;

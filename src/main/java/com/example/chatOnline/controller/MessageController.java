@@ -29,11 +29,11 @@ public class MessageController {
     @MessageMapping("/conversation/{conversationId}/sendMessage")
     @SendTo("/topic/conversation/{conversationId}")
     public MessageResponseDto sendMessage(
-        @DestinationVariable Long converstaionId,
+        @DestinationVariable Long conversationId,
         @Payload MessageRequestDto request,
         Principal principal
     ){
-        return conversationService.saveMessage(converstaionId, request, principal.getName());
+        return conversationService.saveMessage(conversationId, request, principal.getName());
     }
 
 }

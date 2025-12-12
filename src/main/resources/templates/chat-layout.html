@@ -26,13 +26,14 @@
             <div class="list-group">
                 <!-- Iterate over conversations -->
                 <a th:each="chat : ${conversations}"
+                   th:attr="data-conversation-id=${chat.id}"
                    th:href="@{/chats/{id}(id=${chat.id})}"
                    class="list-group-item list-group-item-action conversation-item"
                    th:classappend="${chat.active} ? 'active' : ''">
                     <div class="d-flex w-100 justify-content-between">
                         <h6 class="mb-1" th:text="${chat.conversationName}">User Name</h6>
                     </div>
-                    <small th:text="${chat.lastMessage}">Last message...</small>
+                    <small th:text="${chat.lastMessage}" class="last-message">Last message...</small>
                 </a>
             </div>
         </div>
@@ -113,7 +114,7 @@
                 content: content,
                 conversationId: conversationId
             };
-            stompClient.send("/app/chat/" + conversationId + "/sendMessage", {}, JSON.stringify(chatMessage));
+            stompClient.send("/app/conversation/" + conversationId + "/sendMessage", {}, JSON.stringify(chatMessage));
             document.getElementById("messageInput").value = '';
         }
     }
@@ -125,10 +126,27 @@
         var div = document.createElement('div');
         div.className = (message.senderUsername === username) ? 'message-sent' : 'message-received';
         div.innerHTML = `<div class="msg-bubble">${message.content}</div>`;
-        
         messageArea.appendChild(div);
         messageArea.scrollTop = messageArea.scrollHeight; // Scroll to bottom
-    }
+
+        // 1. Find the HTML element for this conversation
+        var chatItem = document.querySelector(`[data-conversation-id="${message.conversationId}"]`);
+        
+        if (chatItem) {
+            // 2. Update the text
+            var messagePreview = chatItem.querySelector('.last-message');
+            if (messagePreview) {
+                messagePreview.innerText = message.content;
+            }
+
+            // 3. Optional: Move this chat to the top of the list
+            var parentList = chatItem.parentElement; // The container
+            parentList.prepend(chatItem); // Moves element to top
+            
+            // 4. Highlight if unread (Optional logic)
+            chatItem.classList.add("fw-bold"); 
+        }
+}
 </script>
 
 </body>
