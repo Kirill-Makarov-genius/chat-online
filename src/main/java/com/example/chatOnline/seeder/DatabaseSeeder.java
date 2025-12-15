@@ -89,7 +89,7 @@ public class DatabaseSeeder implements CommandLineRunner {
         ChatParticipant participant = ChatParticipant.builder()
                 .user(user)
                 .conversation(conversation)
-                .isAmin(isAdmin) // Matches your entity field name (typo in entity: isAmin vs isAdmin)
+                .isAdmin(isAdmin) // Matches your entity field name (typo in entity: isAmin vs isAdmin)
                 .build();
         participantRepository.save(participant);
     }

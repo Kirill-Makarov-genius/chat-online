@@ -44,6 +44,8 @@ public class Conversation {
     @Enumerated(EnumType.STRING)
     private ConversationType conversationType;
 
+    private String conversationPicture;
+
     @OneToMany(mappedBy = "conversation", cascade = CascadeType.ALL)
     private Set<ChatParticipant> participants;
 

@@ -46,7 +46,7 @@ public class ChatParticipant {
     @CreationTimestamp
     private LocalDateTime joinedAt;
 
-    private boolean isAmin;
+    private boolean isAdmin;
     
 
 }

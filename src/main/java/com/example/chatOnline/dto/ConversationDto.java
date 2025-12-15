@@ -16,6 +16,8 @@ public class ConversationDto {
     private String conversationName;
     private String lastMessage;
     private ConversationType conversationType;
+    private String conversationPicture;
     private boolean isActive;
+
 
 }

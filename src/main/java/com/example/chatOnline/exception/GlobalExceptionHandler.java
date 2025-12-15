@@ -8,16 +8,21 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
 
-// @ControllerAdvice
-// public class GlobalExceptionHandler {
-    
+ @ControllerAdvice
+ public class GlobalExceptionHandler {
 
-//     @ExceptionHandler(UserAlreadyExistsException.class)
-//     @ResponseStatus(HttpStatus.CONFLICT)
-//     public String handleUserExists(UserAlreadyExistsException ex, Model model){
-//         model.addAttribute("errors", ex.getMessage());
-//         model.addAttribute("registrationFormDto", model.getAttribute("registationFormDto"));
-//         return "login";
-//     }
 
-// }
+    @ExceptionHandler(UserNotFoundException.class)
+    public String handlerUserNotFoundException(UserNotFoundException ex, Model model){
+        model.addAttribute("message", ex.getMessage());
+        model.addAttribute("status", 404);
+        return "error/404";
+    }
+
+    @ExceptionHandler(ConversationNotFoundException.class)
+     public String handlerConversationNotFoundException(ConversationNotFoundException ex, Model model){
+        model.addAttribute("message", ex.getMessage());
+        model.addAttribute("status", 404);
+        return "error/404";
+    }
+ }

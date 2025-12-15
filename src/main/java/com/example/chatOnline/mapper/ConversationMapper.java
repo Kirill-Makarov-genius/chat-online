@@ -14,6 +14,7 @@ public class ConversationMapper {
                 .conversationName(conversation.getConversationName())
                 .lastMessage(conversation.getLastMessage())
                 .conversationType(conversation.getConversationType())
+                .conversationPicture(conversation.getConversationPicture())
                 .build();
     }
 }

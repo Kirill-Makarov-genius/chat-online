@@ -6,6 +6,9 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import com.example.chatOnline.dto.UserDto;
+import com.example.chatOnline.exception.ConversationNotFoundException;
+import com.example.chatOnline.exception.UserNotFoundException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -73,18 +76,20 @@ public class ConversationService {
 
     public List<ConversationDto> getAllUserConversation(String username){
         User currentUser = userRepository.findByUsername(username)
-            .orElseThrow();
+            .orElseThrow(() -> new UserNotFoundException("User with username - " + username + " doesn't exist"));
 
         Set<ChatParticipant> chatParticipants = chatParticipantRepository.findAllByUser(currentUser);
 
         return chatParticipants.stream().map(participantConversation -> {
             Conversation conversation = participantConversation.getConversation();
 
-            String displayName = calculateDisplayName(conversation, currentUser);
+            String conversationName = calculateConversationName(conversation, currentUser);
+            String conversationPicture = calculateConversationPicture(conversation, currentUser);
             if (conversation.getLastMessage() == null || conversation.getLastMessage().isEmpty()){
                 conversation.setLastMessage("No messages yet");
             }
-            conversation.setConversationName(displayName);
+            conversation.setConversationName(conversationName);
+            conversation.setConversationPicture(conversationPicture);
 
             return conversationMapper.toDto(conversation);
         }).collect(Collectors.toList());
@@ -92,10 +97,10 @@ public class ConversationService {
 
     public List<MessageResponseDto> getHistoryOfConversation(Long conversationId, String username){
         User currentUser = userRepository.findByUsername(username)
-            .orElseThrow(() -> new RuntimeException("User not found"));
+            .orElseThrow(() -> new UserNotFoundException("User with username - " + username + " can't found"));
         
         Conversation conversation = conversationRepository.findById(conversationId)
-            .orElseThrow(() -> new RuntimeException("Conversation not found"));
+            .orElseThrow(() -> new ConversationNotFoundException("Conversation with id - " + conversationId + " can't found"));
         
         
         if (!chatParticipantRepository.existsByUserIdAndConversationId(currentUser.getId(), conversationId)){
@@ -111,20 +116,45 @@ public class ConversationService {
     }
 
 
-
-
-
-    private String calculateDisplayName(Conversation conversation, User currentUser){
-        // If it's a group then just return group name 
+    private String calculateConversationName(Conversation conversation, User currentUser){
         if (conversation.getConversationType() == ConversationType.GROUP){
             return conversation.getConversationName();
         }
+        else{
+            return conversation.getParticipants().stream()
+                    .filter(participant -> !participant.getUser().getId().equals(currentUser.getId()))
+                    .findFirst()
+                    .map(participant -> participant.getUser().getNickname())
+                    .orElse("Unknown User");
+        }
+    }
 
-        // If is's private chat we should find nickname of user that not equal current
-        return conversation.getParticipants().stream()
-            .filter(participant -> !participant.getUser().getId().equals(currentUser.getId()))
-            .findFirst()
-            .map(participant -> participant.getUser().getNickname())
-            .orElse("Unknown User");
+
+    private String calculateConversationPicture(Conversation conversation, User currentUser){
+        // If it's a group then just return group name 
+        if (conversation.getConversationType() == ConversationType.GROUP){
+            if (conversation.getConversationPicture() == null || conversation.getConversationPicture().isEmpty()){
+                return "https://ui-avatars.com/api/?name=" + conversation.getConversationName() + "&background=0D8ABC&color=fff";
+            }
+            else{
+                return "/api/images/" + conversation.getConversationPicture();
+            }
+        }
+
+        User otherUser = conversation.getParticipants().stream()
+                .filter((p) -> !p.getUser().getId().equals(currentUser.getId()))
+                .findFirst()
+                .map(ChatParticipant::getUser)
+                .orElse(null);
+
+        if (otherUser != null){
+                if (otherUser.getProfilePicture() == null || otherUser.getProfilePicture().isEmpty()){
+                    return "https://ui-avatars.com/api/?name=" + otherUser.getNickname() + "&background=0D8ABC&color=fff";
+                }
+                else {
+                    return "/api/images/" + otherUser.getProfilePicture();
+                }
+        }
+        return "https://ui-avatars.com/api/?name=??";
     }
 }

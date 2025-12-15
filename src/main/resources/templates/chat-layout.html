@@ -3,7 +3,9 @@
 <head>
     <title>My Chat App</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
     <style>
+        .main-row { height: 100vh; /* Full Viewport Height */}
         .chat-list { height: 80vh; overflow-y: auto; border-right: 1px solid #ddd; }
         .chat-box { height: 70vh; overflow-y: auto; background: #f8f9fa; padding: 15px; }
         .conversation-item:hover { background-color: #f1f1f1; cursor: pointer; }
@@ -17,12 +19,37 @@
 </head>
 <body>
 
-<div class="container-fluid mt-4">
-    <div class="row">
-        
-        <!-- SIDEBAR: List of Conversations -->
-        <div class="col-md-3 chat-list">
-            <h4 class="mb-3">Messages</h4>
+<div class="container-fluid">
+    <div class="row main-row">
+
+        <!-- LEFT COLUMN: SIDEBAR -->
+        <div class="col-md-3 col-lg-3 p-3 sidebar">
+
+            <!-- --- YOUR SIDEBAR HEADER CODE --- -->
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h4 class="mb-0 fw-bold text-primary">Messages</h4>
+
+                <div class="btn-group">
+                    <!-- Settings Button (Link to Profile Page) -->
+                    <a href="/profile" class="btn btn-outline-secondary btn-sm" title="Settings">
+                        <i class="bi bi-gear-fill"></i>
+                    </a>
+
+                    <!-- Logout Form -->
+                    <form th:action="@{/logout}" method="post" class="d-inline">
+                        <button type="submit" class="btn btn-outline-danger btn-sm ms-1" title="Logout">
+                            <i class="bi bi-box-arrow-right"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+            <!-- ------------------------------- -->
+
+            <!-- Search Bar (Optional Visual) -->
+            <div class="mb-3">
+                <input type="text" class="form-control form-control-sm" placeholder="Search chats...">
+            </div>
+
             <div class="list-group">
                 <!-- Iterate over conversations -->
                 <a th:each="chat : ${conversations}"
@@ -30,6 +57,13 @@
                    th:href="@{/chats/{id}(id=${chat.id})}"
                    class="list-group-item list-group-item-action conversation-item"
                    th:classappend="${chat.active} ? 'active' : ''">
+                    <div class="me-3 position-relative">
+                        <img th:src="${chat.conversationPicture}"
+                             alt="Avatar"
+                             class="rounded-circle border"
+                             style="width: 45px; height: 45px; object-fit: cover;">
+                         <span class="position-absolute bottom-0 start-100 translate-middle p-1 bg-success border border-light rounded-circle"></span>
+                    </div>
                     <div class="d-flex w-100 justify-content-between">
                         <h6 class="mb-1" th:text="${chat.conversationName}">User Name</h6>
                     </div>
@@ -90,6 +124,15 @@
     var stompClient = null;
     var conversationId = document.getElementById("currentConversationId").value;
     var username = document.getElementById("currentUsername").value;
+    var inputElement = document.getElementById("messageInput");
+    inputElement.addEventListener("keypress", function(event) {
+        if (event.key == "Enter"){
+            event.preventDefault();
+            sendMessage();
+        }
+    });
+
+
 
     // Only connect if a conversation is selected
     if (conversationId) {

@@ -3,6 +3,10 @@ package com.example.chatOnline.service;
 import java.util.Collection;
 import java.util.Collections;
 
+import com.example.chatOnline.dto.UserDto;
+import com.example.chatOnline.exception.UserNotFoundException;
+import com.example.chatOnline.mapper.UserMapper;
+import org.springframework.resilience.annotation.RetryAnnotationBeanPostProcessor;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -23,6 +27,8 @@ public class CustomUserDetailsService implements UserDetailsService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
 
+    private final UserMapper userMapper;
+
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         return userRepository.findByUsername(username)
@@ -41,4 +47,13 @@ public class CustomUserDetailsService implements UserDetailsService {
                 .build();
         userRepository.save(newUser);
     }
+
+    public UserDto getUserProfile(String username){
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
+
+        return userMapper.toDto(user);
+
+    }
+
 }

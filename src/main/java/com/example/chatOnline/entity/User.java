@@ -49,6 +49,10 @@ public class User implements UserDetails{
     @OneToMany(mappedBy = "user")
     private Set<ChatParticipant> conversations;
 
+    private String profilePicture;
+
+
+
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return Collections.singletonList(new SimpleGrantedAuthority("ROLE_USER"));

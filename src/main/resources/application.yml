@@ -7,3 +7,9 @@ spring:
         show-sql: true
         hibernate:
             ddl-auto: create-drop
+    servlet:
+      multipart:
+        max-file-size: 100MB
+        max-request-size: 100MB
+file:
+    upload-dir: uploads
