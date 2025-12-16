@@ -17,11 +17,11 @@
                 </div>
                 <div class="card-body">
 
-                    <form th:action="@{/profile/update}" method="post" enctype="multipart/form-data">
+                    <form th:action="@{/profile/update}" method="post" enctype="multipart/form-data" th:object="${userDto}">
 
                         <!-- Current Profile Picture Preview -->
                         <div class="text-center mb-4">
-                            <img th:src="${user.getProfilePictureUrl()}"
+                            <img th:src="${userDto.getProfilePictureUrl()}"
                                  class="rounded-circle border"
                                  style="width: 120px; height: 120px; object-fit: cover;"
                                  alt="Profile Picture">
@@ -29,11 +29,12 @@
 
                         <!-- Nickname Input -->
                         <div class="mb-3">
-                            <label for="nickname" class="form-label">Username / Nickname</label>
+                            <label for="nickname" class="form-label">Nickname</label>
                             <div class="input-group">
                                 <span class="input-group-text"><i class="bi bi-person"></i></span>
                                 <input type="text" class="form-control" id="nickname" name="nickname"
-                                       th:value="${user.username}" required>
+                                       th:field="*{nickname}">
+                                <span th:if="${#fields.hasErrors('username')}" th:errors="*{nickname}"></span>
                             </div>
                             <div class="form-text">This name will be visible to other users.</div>
                         </div>
@@ -48,7 +49,7 @@
 
                         <!-- Buttons -->
                         <div class="d-flex justify-content-between">
-                            <a href="/chats" class="btn btn-secondary">Cancel</a>
+                            <a href="/chats" class="btn btn-secondary">Back</a>
                             <button type="submit" class="btn btn-primary">Save Changes</button>
                         </div>
 

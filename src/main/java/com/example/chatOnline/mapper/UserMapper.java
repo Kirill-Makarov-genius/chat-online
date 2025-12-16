@@ -13,6 +13,7 @@ public class UserMapper {
         return UserDto.builder()
                 .id(user.getId())
                 .username(user.getUsername())
+                .nickname(user.getNickname())
                 .profilePicture(user.getProfilePicture())
                 .build();
     }

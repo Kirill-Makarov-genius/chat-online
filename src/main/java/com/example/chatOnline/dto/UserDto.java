@@ -1,5 +1,6 @@
 package com.example.chatOnline.dto;
 
+import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
 
@@ -10,6 +11,7 @@ import lombok.*;
 public class UserDto {
     Long id;
     String username;
+    @NotNull
     String nickname;
     String profilePicture;
 

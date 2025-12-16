@@ -6,7 +6,7 @@ spring:
     jpa:           
         show-sql: true
         hibernate:
-            ddl-auto: create-drop
+            ddl-auto: create
     servlet:
       multipart:
         max-file-size: 100MB

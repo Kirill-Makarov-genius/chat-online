@@ -6,6 +6,7 @@ import java.util.Collections;
 import com.example.chatOnline.dto.UserDto;
 import com.example.chatOnline.exception.UserNotFoundException;
 import com.example.chatOnline.mapper.UserMapper;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.resilience.annotation.RetryAnnotationBeanPostProcessor;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -19,6 +20,8 @@ import com.example.chatOnline.exception.UserAlreadyExistsException;
 import com.example.chatOnline.repository.UserRepository;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.web.multipart.MultipartFile;
+
 
 @Service
 @RequiredArgsConstructor
@@ -28,6 +31,8 @@ public class CustomUserDetailsService implements UserDetailsService {
     private final PasswordEncoder passwordEncoder;
 
     private final UserMapper userMapper;
+
+    private final FileStorageService fileStorageService;
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
@@ -54,6 +59,18 @@ public class CustomUserDetailsService implements UserDetailsService {
 
         return userMapper.toDto(user);
 
+    }
+
+    public UserDto saveUserProfileSettings(UserDto userDto, MultipartFile filePicture, String username){
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new UserNotFoundException("User not found " + userDto.getUsername()));
+        user.setNickname(userDto.getNickname());
+        if (filePicture != null && !filePicture.isEmpty()){
+            String fileName = fileStorageService.storeFile(filePicture);
+            user.setProfilePicture(fileName);
+        }
+        userRepository.save(user);
+        return userMapper.toDto(user);
     }
 
 }
