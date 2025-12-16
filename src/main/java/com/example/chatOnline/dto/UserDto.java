@@ -1,6 +1,7 @@
 package com.example.chatOnline.dto;
 
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import lombok.*;
 
 
@@ -12,8 +13,11 @@ public class UserDto {
     Long id;
     String username;
     @NotNull
+    @Size(max = 50, message = "Nickname can't be more than 50 letters")
     String nickname;
+    @Size(max = 100, message = "Status should be less than 100 letters")
     String status;
+    @Size(max = 255, message = "Description shouldn't be more than 255")
     String description;;
     String profilePicture;
 

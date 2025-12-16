@@ -1,14 +1,14 @@
 package com.example.chatOnline.exception;
 
-import org.springframework.http.HttpStatus;
+import org.apache.tomcat.util.http.fileupload.impl.SizeLimitExceededException;
 import org.springframework.ui.Model;
-import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 
- @ControllerAdvice
+@ControllerAdvice
  public class GlobalExceptionHandler {
 
 
@@ -25,4 +25,14 @@ import org.springframework.web.bind.annotation.ResponseStatus;
         model.addAttribute("status", 404);
         return "error/404";
     }
+
+    @ExceptionHandler(FileTooLargeException.class)
+    public String handlesMaxSizeException(FileTooLargeException ex,
+                                          RedirectAttributes redirectAttributes){
+        redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
+
+        return "redirect:/profile";
+
+    }
+
  }

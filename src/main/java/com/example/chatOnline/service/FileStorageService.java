@@ -1,10 +1,12 @@
 package com.example.chatOnline.service;
 
 
+import com.example.chatOnline.exception.FileTooLargeException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
@@ -19,10 +21,10 @@ import java.util.UUID;
 public class FileStorageService {
 
     private final Path fileStorageLocation;
-
+    private final long MAX_FILE_SIZE;
     public FileStorageService(@Value("${file.upload-dir}") String uploadDir){
         this.fileStorageLocation = Paths.get(uploadDir).toAbsolutePath().normalize();
-
+        this.MAX_FILE_SIZE = 10L * 1024 * 1024;
         try{
             Files.createDirectories(this.fileStorageLocation);
         } catch (IOException ex) {
@@ -33,8 +35,9 @@ public class FileStorageService {
     public String storeFile(MultipartFile file){
         String originalFileName = file.getOriginalFilename();
         if (originalFileName == null) throw new RuntimeException("Invalid file");
-
-
+        if (file.getSize() > MAX_FILE_SIZE){
+            throw new FileTooLargeException("The file is too big! Max size is 100mb");
+        }
         // Generate UUID for uploaded file and add extension
         String fileExtension = originalFileName.substring(originalFileName.lastIndexOf('.'));
         String newFileName = UUID.randomUUID().toString() + fileExtension;

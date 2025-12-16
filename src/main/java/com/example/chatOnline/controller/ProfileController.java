@@ -1,10 +1,13 @@
 package com.example.chatOnline.controller;
 
 import com.example.chatOnline.dto.UserDto;
+import com.example.chatOnline.repository.UserRepository;
 import com.example.chatOnline.service.CustomUserDetailsService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -18,6 +21,8 @@ public class ProfileController {
 
     private final CustomUserDetailsService userService;
 
+    private final UserRepository userRepository;
+
     @GetMapping
     public String showUserSettingsProfile(Model model, Principal principal){
         UserDto curUser = userService.getUserProfile(principal.getName());
@@ -26,22 +31,23 @@ public class ProfileController {
     }
 
     @PostMapping("/update")
-    public String updateUserProfile(@ModelAttribute UserDto userDto,
+    public String updateUserProfile(@Valid @ModelAttribute UserDto userDto,
+                                    BindingResult bindingResult,
                                     @RequestParam(value="profileImage", required = false) MultipartFile file,
                                     Principal principal){
-//        if (bindingResult.hasErrors()){
-//            return "user-settings";
-//        }
+        if (bindingResult.hasErrors()){
+            return "user-settings";
+        }
         String curUsername = principal.getName();
         userService.saveUserProfileSettings(userDto, file, curUsername);
         return "redirect:/profile";
     }
 
-    @GetMapping("/users/{userId}")
-    public String viewUserProfile(@PathVariable Long userId,
+    @GetMapping("/users/{username}")
+    public String viewUserProfile(@PathVariable String username,
                                   Model model,
                                   Principal principal){
-        UserDto userProfile = userService.getUserProfile(userId);
+        UserDto userProfile = userService.getUserProfile(username);
         boolean isOwnProfile = principal.getName().equals(userProfile.getUsername());
 
         model.addAttribute("user", userProfile);
