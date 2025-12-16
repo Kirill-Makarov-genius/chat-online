@@ -43,6 +43,10 @@ public class User implements UserDetails{
 
     private String password;
 
+    private String status;
+
+    private String description;
+
     @OneToMany(mappedBy = "sender")
     private Set<Message> messages;
 

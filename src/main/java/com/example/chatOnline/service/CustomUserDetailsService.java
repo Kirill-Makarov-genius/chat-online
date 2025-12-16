@@ -55,22 +55,32 @@ public class CustomUserDetailsService implements UserDetailsService {
 
     public UserDto getUserProfile(String username){
         User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new UserNotFoundException("User " + username + " not found"));
+
+        return userMapper.toDto(user);
+
+    }
+    public UserDto getUserProfile(Long userId){
+        User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException("User not found"));
 
         return userMapper.toDto(user);
 
     }
 
-    public UserDto saveUserProfileSettings(UserDto userDto, MultipartFile filePicture, String username){
+    public void saveUserProfileSettings(UserDto userDto, MultipartFile filePicture, String username){
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new UserNotFoundException("User not found " + userDto.getUsername()));
+
         user.setNickname(userDto.getNickname());
+        user.setStatus(userDto.getStatus());
+        user.setDescription(userDto.getDescription());
+
         if (filePicture != null && !filePicture.isEmpty()){
             String fileName = fileStorageService.storeFile(filePicture);
             user.setProfilePicture(fileName);
         }
         userRepository.save(user);
-        return userMapper.toDto(user);
     }
 
 }

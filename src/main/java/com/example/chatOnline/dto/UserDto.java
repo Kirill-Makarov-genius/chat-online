@@ -13,6 +13,8 @@ public class UserDto {
     String username;
     @NotNull
     String nickname;
+    String status;
+    String description;;
     String profilePicture;
 
     public String getProfilePictureUrl() {

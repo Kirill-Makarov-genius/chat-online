@@ -1,15 +1,10 @@
 package com.example.chatOnline.controller;
 
 import com.example.chatOnline.dto.UserDto;
-import com.example.chatOnline.entity.User;
-import com.example.chatOnline.repository.UserRepository;
 import com.example.chatOnline.service.CustomUserDetailsService;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -24,9 +19,8 @@ public class ProfileController {
     private final CustomUserDetailsService userService;
 
     @GetMapping
-    public String showUserProfile(Model model, Principal principal){
+    public String showUserSettingsProfile(Model model, Principal principal){
         UserDto curUser = userService.getUserProfile(principal.getName());
-        System.out.println(curUser);
         model.addAttribute("userDto", curUser);
         return "user-settings";
     }
@@ -41,6 +35,19 @@ public class ProfileController {
         String curUsername = principal.getName();
         userService.saveUserProfileSettings(userDto, file, curUsername);
         return "redirect:/profile";
+    }
+
+    @GetMapping("/users/{userId}")
+    public String viewUserProfile(@PathVariable Long userId,
+                                  Model model,
+                                  Principal principal){
+        UserDto userProfile = userService.getUserProfile(userId);
+        boolean isOwnProfile = principal.getName().equals(userProfile.getUsername());
+
+        model.addAttribute("user", userProfile);
+        model.addAttribute("isOwnProfile", isOwnProfile);
+
+        return "user-profile";
     }
 
 
