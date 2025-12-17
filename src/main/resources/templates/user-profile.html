@@ -74,7 +74,7 @@
                         </a>
 
                         <!-- CASE B: Viewing Someone Else -->
-                        <form th:unless="${isOwnProfile}" th:action="@{/chats/create}" method="post">
+                        <form th:unless="${isOwnProfile}" th:action="@{/chats/open}" method="post">
                             <input type="hidden" name="targetUsername" th:value="${user.username}">
                             <button type="submit" class="btn btn-primary w-100">
                                 <i class="bi bi-chat-dots-fill"></i> Send Message

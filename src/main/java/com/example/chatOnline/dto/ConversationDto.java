@@ -15,6 +15,7 @@ public class ConversationDto {
     private Long id;
     private String conversationName;
     private String lastMessage;
+    private String targetUsername;
     private ConversationType conversationType;
     private String conversationPicture;
     private boolean isActive;

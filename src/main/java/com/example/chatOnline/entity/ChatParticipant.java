@@ -21,7 +21,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
-@Table(name="chat_patricipants",
+@Table(name="chat_participants",
     uniqueConstraints = @UniqueConstraint(columnNames = {"user_id", "conversation_id"}))
 @Getter
 @Setter

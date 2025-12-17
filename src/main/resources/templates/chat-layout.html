@@ -1,20 +1,165 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
-    <title>My Chat App</title>
+    <title>Chat Online</title>
+    <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+
     <style>
-        .main-row { height: 100vh; /* Full Viewport Height */}
-        .chat-list { height: 80vh; overflow-y: auto; border-right: 1px solid #ddd; }
-        .chat-box { height: 70vh; overflow-y: auto; background: #f8f9fa; padding: 15px; }
-        .conversation-item:hover { background-color: #f1f1f1; cursor: pointer; }
-        .conversation-item.active { background-color: #0d6efd; color: white; }
-        .message-sent { text-align: right; }
-        .message-sent .msg-bubble { background-color: #0d6efd; color: white; }
-        .message-received { text-align: left; }
-        .message-received .msg-bubble { background-color: #e9ecef; color: black; }
-        .msg-bubble { display: inline-block; padding: 10px; border-radius: 15px; margin-bottom: 5px; max-width: 70%; }
+        /* --- LAYOUT SETUP --- */
+        body, html {
+            height: 100%;
+            margin: 0;
+            overflow: hidden; /* Prevent body scroll, handle inside divs */
+            background-color: #f0f2f5;
+        }
+
+        .main-row {
+            height: 100vh;
+
+        }
+
+        /* --- SCROLLBAR HIDING (Cross Browser) --- */
+        .hide-scrollbar {
+            -ms-overflow-style: none;  /* IE and Edge */
+            scrollbar-width: none;  /* Firefox */
+        }
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none; /* Chrome, Safari, Opera */
+        }
+
+        /* --- SIDEBAR STYLES --- */
+        .sidebar {
+            background-color: white;
+            border-right: 1px solid #dee2e6;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            padding: 0;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .chat-list {
+            flex-grow: 1;
+            overflow-y: auto;
+        }
+
+        .conversation-item {
+            border: none;
+            border-bottom: 1px solid #f8f9fa;
+            cursor: pointer;
+            transition: background 0.2s;
+            padding: 15px 20px;
+        }
+
+        .conversation-item:hover {
+            background-color: #f5f5f5;
+        }
+
+        .conversation-item.active {
+            background-color: #e7f1ff;
+            border-left: 4px solid #0d6efd;
+        }
+
+        .avatar-img {
+            width: 45px;
+            height: 45px;
+            object-fit: cover;
+            border-radius: 50%;
+            border: 1px solid #dee2e6;
+        }
+
+        /* --- CHAT AREA STYLES --- */
+        .chat-area {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            background-color: #efeae2; /* WhatsApp-like generic bg */
+            /* background-image: url('path-to-pattern.png'); Optional */
+        }
+
+        .chat-header {
+            background-color: white;
+            padding: 10px 20px;
+            border-bottom: 1px solid #dee2e6;
+            display: flex;
+            align-items: center;
+            height: 60px;
+        }
+
+        .messages-box {
+            flex-grow: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Pushes messages to bottom if there are few */
+        .messages-box > :first-child {
+            margin-top: auto;
+        }
+
+        .chat-footer {
+            background-color: #f0f0f0;
+            padding: 10px 20px;
+            height: 70px;
+            display: flex;
+            align-items: center;
+        }
+
+        /* --- MESSAGE BUBBLES --- */
+        .message-container {
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 8px;
+            max-width: 70%;
+        }
+
+        /* RECEIVED (Left) */
+        .message-received {
+            align-self: flex-start;
+            align-items: flex-start;
+        }
+        .message-received .msg-bubble {
+            background-color: white;
+            color: #303030;
+            border-radius: 0 12px 12px 12px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        }
+
+        /* SENT (Right) */
+        .message-sent {
+            align-self: flex-end;
+            align-items: flex-end;
+        }
+        .message-sent .msg-bubble {
+            background-color: #d9fdd3; /* Light Green */
+            color: black;
+            border-radius: 12px 0 12px 12px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        }
+
+        .msg-bubble {
+            padding: 8px 12px;
+            position: relative;
+            word-wrap: break-word;
+            font-size: 0.95rem;
+        }
+
+        .sender-name {
+            font-size: 0.75rem;
+            color: #d63384; /* Distinct color for names */
+            margin-bottom: 2px;
+            margin-left: 2px;
+            font-weight: 600;
+        }
     </style>
 </head>
 <body>
@@ -22,174 +167,258 @@
 <div class="container-fluid">
     <div class="row main-row">
 
-        <!-- LEFT COLUMN: SIDEBAR -->
-        <div class="col-md-3 col-lg-3 p-3 sidebar">
+        <!-- ================= SIDEBAR ================= -->
+        <div class="col-md-4 col-lg-3 sidebar">
 
-            <!-- --- YOUR SIDEBAR HEADER CODE --- -->
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <h4 class="mb-0 fw-bold text-primary">Messages</h4>
+            <!-- HEADER -->
+            <div class="sidebar-header d-flex justify-content-between align-items-center">
 
+                <a href="/" class="btn btn-light btn-sm rounded-circle" title="Chats">
+                    <h4 class="mb-0 fw-bold text-primary">Chats</h4>
+                </a>
                 <div class="btn-group">
-                    <!-- Settings Button (Link to Profile Page) -->
-                    <a href="/profile" class="btn btn-outline-secondary btn-sm" title="Settings">
-                        <i class="bi bi-gear-fill"></i>
+                    <a href="/profile" class="btn btn-light btn-sm rounded-circle" title="Settings">
+                        <i class="bi bi-gear-fill text-secondary"></i>
                     </a>
-
-                    <!-- Logout Form -->
-                    <form th:action="@{/logout}" method="post" class="d-inline">
-                        <button type="submit" class="btn btn-outline-danger btn-sm ms-1" title="Logout">
-                            <i class="bi bi-box-arrow-right"></i>
+                    <form th:action="@{/logout}" method="post" class="d-inline ms-1">
+                        <button type="submit" class="btn btn-light btn-sm rounded-circle" title="Logout">
+                            <i class="bi bi-box-arrow-right text-danger"></i>
                         </button>
                     </form>
                 </div>
             </div>
-            <!-- ------------------------------- -->
 
-            <!-- Search Bar (Optional Visual) -->
-            <div class="mb-3">
-                <input type="text" class="form-control form-control-sm" placeholder="Search chats...">
+            <!-- SEARCH (Visual Only) -->
+            <div class="p-2">
+                <input type="text" class="form-control form-control-sm bg-light border-0" placeholder="Search or start new chat">
             </div>
 
-            <div class="list-group">
-                <!-- Iterate over conversations -->
+            <!-- CONVERSATION LIST -->
+            <div class="chat-list hide-scrollbar">
                 <a th:each="chat : ${conversations}"
-                   th:attr="data-conversation-id=${chat.id}"
                    th:href="@{/chats/{id}(id=${chat.id})}"
+                   th:attr="data-conversation-id=${chat.id}"
                    class="list-group-item list-group-item-action conversation-item"
                    th:classappend="${chat.active} ? 'active' : ''">
-                    <div class="me-3 position-relative">
-                        <img th:src="${chat.conversationPicture}"
-                             alt="Avatar"
-                             class="rounded-circle border"
-                             style="width: 45px; height: 45px; object-fit: cover;">
-                         <span class="position-absolute bottom-0 start-100 translate-middle p-1 bg-success border border-light rounded-circle"></span>
+
+                    <div class="d-flex align-items-center">
+                        <!-- Avatar -->
+                        <div class="position-relative">
+                            <img th:src="${chat.conversationPicture}" alt="Avatar" class="avatar-img">
+                        </div>
+
+                        <!-- Text Info -->
+                        <div class="ms-3 overflow-hidden w-100">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <h6 class="mb-0 text-truncate" th:text="${chat.conversationName}">User Name</h6>
+                                <!-- Optional: You can add time here if you have it in DTO -->
+                                <!-- <small class="text-muted" style="font-size: 0.7rem;">12:30</small> -->
+                            </div>
+                            <small class="text-muted text-truncate d-block last-message" th:text="${chat.lastMessage}">
+                                Last message content...
+                            </small>
+                        </div>
                     </div>
-                    <div class="d-flex w-100 justify-content-between">
-                        <h6 class="mb-1" th:text="${chat.conversationName}">User Name</h6>
-                    </div>
-                    <small th:text="${chat.lastMessage}" class="last-message">Last message...</small>
                 </a>
             </div>
         </div>
 
-        <!-- MAIN AREA: Chat Box -->
-        <div class="col-md-9">
-            
-            <!-- Welcome Screen (If no chat selected) -->
-            <div th:if="${activeConversationId == null}" class="d-flex align-items-center justify-content-center" style="height: 80vh;">
-                <div class="text-center text-muted">
-                    <h3>Welcome to Chat!</h3>
-                    <p>Select a conversation from the left to start messaging.</p>
+        <!-- ================= MAIN CHAT AREA ================= -->
+        <div class="col-md-8 col-lg-9 p-0">
+
+            <!-- SCENARIO A: NO CHAT SELECTED -->
+            <div th:if="${activeConversation == null}" class="d-flex flex-column justify-content-center align-items-center h-100" style="background-color: #f0f2f5;">
+                <div class="text-center p-5">
+                    <i class="bi bi-chat-heart text-secondary" style="font-size: 5rem;"></i>
+                    <h2 class="mt-4 text-secondary">Welcome, <span th:text="${username}">User</span>!</h2>
+                    <p class="text-muted lead">Select a chat to start messaging.</p>
                 </div>
             </div>
 
-            <!-- Active Chat Interface -->
-            <div th:if="${activeConversationId != null}">
-                <div class="card">
-                    <div class="card-header">Chat Room #<span th:text="${activeConversationId}"></span></div>
-                    
-                    <!-- Messages Area -->
-                    <div id="messageArea" class="chat-box">
-                        <!-- Loop through history -->
-                        <div th:each="msg : ${chatHistory}" 
-                             th:class="${msg.senderUsername == username} ? 'message-sent' : 'message-received'">
-                            <div class="msg-bubble">
-                                <span th:text="${msg.content}">Message Content</span>
-                            </div>
+            <!-- SCENARIO B: ACTIVE CHAT -->
+            <div th:if="${activeConversation != null}" class="chat-area">
+
+                <!-- 1. CHAT HEADER -->
+                <div class="chat-header shadow-sm">
+
+                    <!-- WRAP IN LINK -->
+                    <a th:href="@{/profile/users/{username}(username=${activeConversation.getTargetUsername()})}"
+                       class="d-flex align-items-center text-decoration-none text-dark">
+
+                        <!-- Avatar -->
+                        <img th:src="${activeConversation.getConversationPicture()}"
+                             class="rounded-circle me-2 border"
+                             style="width: 40px; height: 40px; object-fit: cover;"
+                             alt="Avatar">
+
+                        <!-- Name -->
+                        <div>
+                            <h6 class="mb-0" th:text="${activeConversation.getTargetUsername()}">Chat Name</h6>
+                            <small class="text-muted">View Profile</small>
+                        </div>
+                    </a>
+
+                </div>
+
+                <!-- 2. MESSAGES FEED -->
+                <div id="messageArea" class="messages-box hide-scrollbar">
+
+                    <!-- Loop History -->
+                    <div th:each="msg : ${chatHistory}"
+                         class="message-container"
+                         th:classappend="${msg.senderUsername == username} ? 'message-sent' : 'message-received'">
+
+                        <!-- Sender Name (Only for received messages) -->
+                        <span class="sender-name"
+                              th:if="${msg.senderUsername != username}"
+                              th:text="${msg.senderUsername}">Name</span>
+
+                        <!-- Bubble -->
+                        <div class="msg-bubble">
+                            <span th:text="${msg.content}">Message Content</span>
+                            <!-- Time (Optional) -->
+                            <!-- <span class="text-muted ms-2" style="font-size:0.65rem; float:right; margin-top:5px;">10:00</span> -->
                         </div>
                     </div>
 
-                    <!-- Input Area -->
-                    <div class="card-footer">
-                        <div class="input-group">
-                            <input type="text" id="messageInput" class="form-control" placeholder="Type a message...">
-                            <button class="btn btn-primary" onclick="sendMessage()">Send</button>
-                        </div>
+                </div>
+
+                <!-- 3. INPUT FOOTER -->
+                <div class="chat-footer">
+                    <div class="input-group">
+                        <button class="btn btn-light text-secondary" type="button"><i class="bi bi-emoji-smile"></i></button>
+                        <button class="btn btn-light text-secondary" type="button"><i class="bi bi-paperclip"></i></button>
+
+                        <input type="text" id="messageInput" class="form-control border-0 bg-white" placeholder="Type a message..." autocomplete="off">
+
+                        <button class="btn btn-primary" onclick="sendMessage()">
+                            <i class="bi bi-send-fill"></i>
+                        </button>
                     </div>
                 </div>
+
             </div>
-            
         </div>
     </div>
 </div>
 
-<!-- DATA FOR JAVASCRIPT (Hidden Inputs) -->
-<input type="hidden" id="currentConversationId" th:value="${activeConversationId}">
+<!-- HIDDEN DATA FOR JS -->
+<input type="hidden" id="currentConversationId"
+       th:value="${activeConversation != null ? activeConversation.getId() : ''}">
+
 <input type="hidden" id="currentUsername" th:value="${username}">
 
 <!-- SCRIPTS -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.1.4/sockjs.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
 <script>
     var stompClient = null;
     var conversationId = document.getElementById("currentConversationId").value;
     var username = document.getElementById("currentUsername").value;
-    var inputElement = document.getElementById("messageInput");
-    inputElement.addEventListener("keypress", function(event) {
-        if (event.key == "Enter"){
-            event.preventDefault();
-            sendMessage();
+    var messageArea = document.getElementById("messageArea");
+    var messageInput = document.getElementById("messageInput");
+
+    // --- INITIALIZATION ---
+    document.addEventListener("DOMContentLoaded", function() {
+        // 1. Scroll to bottom
+        scrollToBottom();
+
+        // 2. Connect WebSocket
+        if (conversationId) {
+            connect();
+        }
+
+        // 3. Enter Key Listener
+        if (messageInput) {
+            messageInput.addEventListener("keypress", function(event) {
+                if (event.key === "Enter") {
+                    event.preventDefault();
+                    sendMessage();
+                }
+            });
         }
     });
 
-
-
-    // Only connect if a conversation is selected
-    if (conversationId) {
-        connect();
-    }
-
+    // --- WEBSOCKET CONNECTION ---
     function connect() {
         var socket = new SockJS('/ws');
         stompClient = Stomp.over(socket);
-        stompClient.connect({}, function () {
-            // Subscribe to this specific conversation topic
+        stompClient.debug = null; // Disable debug logs
+
+        stompClient.connect({}, function (frame) {
+            console.log('Connected: ' + frame);
             stompClient.subscribe('/topic/conversation/' + conversationId, function (result) {
                 showIncomingMessage(JSON.parse(result.body));
             });
         });
     }
 
+    // --- SEND MESSAGE ---
     function sendMessage() {
-        var content = document.getElementById("messageInput").value;
+        var content = messageInput.value.trim();
         if(content && stompClient) {
             var chatMessage = {
                 content: content,
                 conversationId: conversationId
             };
             stompClient.send("/app/conversation/" + conversationId + "/sendMessage", {}, JSON.stringify(chatMessage));
-            document.getElementById("messageInput").value = '';
+            messageInput.value = ''; // Clear input
+            messageInput.focus();
         }
     }
 
+    // --- DISPLAY MESSAGE ---
     function showIncomingMessage(message) {
-        var messageArea = document.getElementById("messageArea");
-        
-        // Create HTML element
+        if (!messageArea) return;
+
         var div = document.createElement('div');
-        div.className = (message.senderUsername === username) ? 'message-sent' : 'message-received';
-        div.innerHTML = `<div class="msg-bubble">${message.content}</div>`;
+        var isMe = (message.senderUsername === username);
+
+        // Add Classes
+        div.classList.add('message-container');
+        div.classList.add(isMe ? 'message-sent' : 'message-received');
+
+        // Build Name HTML (Only for others)
+        var nameHtml = !isMe ? `<span class="sender-name">${message.senderUsername}</span>` : '';
+
+        // Build Bubble HTML
+        div.innerHTML = `
+            ${nameHtml}
+            <div class="msg-bubble">
+                <span>${message.content}</span>
+            </div>
+        `;
+
         messageArea.appendChild(div);
-        messageArea.scrollTop = messageArea.scrollHeight; // Scroll to bottom
+        scrollToBottom();
+        updateSidebarPreview(message);
+    }
 
-        // 1. Find the HTML element for this conversation
-        var chatItem = document.querySelector(`[data-conversation-id="${message.conversationId}"]`);
-        
-        if (chatItem) {
-            // 2. Update the text
-            var messagePreview = chatItem.querySelector('.last-message');
-            if (messagePreview) {
-                messagePreview.innerText = message.content;
-            }
-
-            // 3. Optional: Move this chat to the top of the list
-            var parentList = chatItem.parentElement; // The container
-            parentList.prepend(chatItem); // Moves element to top
-            
-            // 4. Highlight if unread (Optional logic)
-            chatItem.classList.add("fw-bold"); 
+    // --- HELPERS ---
+    function scrollToBottom() {
+        if (messageArea) {
+            messageArea.scrollTop = messageArea.scrollHeight;
         }
-}
+    }
+
+    function updateSidebarPreview(message) {
+        // Find chat in sidebar
+        var chatItem = document.querySelector(`[data-conversation-id="${message.conversationId}"]`);
+        if (chatItem) {
+            var preview = chatItem.querySelector('.last-message');
+            if (preview) {
+                var prefix = (message.senderUsername === username) ? "You: " : "";
+                preview.innerText = prefix + message.content;
+            }
+            // Move to top
+            chatItem.parentElement.prepend(chatItem);
+            // Highlight
+            chatItem.classList.add("fw-bold");
+            setTimeout(() => chatItem.classList.remove("fw-bold"), 2000);
+        }
+    }
 </script>
 
 </body>

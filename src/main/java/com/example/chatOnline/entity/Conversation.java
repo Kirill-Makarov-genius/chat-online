@@ -34,10 +34,8 @@ public class Conversation {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    
-    @Column(nullable = true)
-    private String conversationName;
 
+    private String conversationName;
 
     private String lastMessage;
 

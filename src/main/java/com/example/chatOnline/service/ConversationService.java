@@ -2,13 +2,18 @@ package com.example.chatOnline.service;
 
 
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.example.chatOnline.dto.UserDto;
 import com.example.chatOnline.exception.ConversationNotFoundException;
 import com.example.chatOnline.exception.UserNotFoundException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -30,6 +35,7 @@ import com.example.chatOnline.repository.MessageRepository;
 import com.example.chatOnline.repository.UserRepository;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.web.bind.annotation.PostMapping;
 
 @Service
 @RequiredArgsConstructor
@@ -41,6 +47,8 @@ public class ConversationService {
     private final UserRepository userRepository;
     private final MessageMapper messageMapper;
     private final ConversationMapper conversationMapper;
+
+
 
     @Transactional
     public MessageResponseDto saveMessage(Long conversationId, MessageRequestDto request, String username){
@@ -83,54 +91,93 @@ public class ConversationService {
         return chatParticipants.stream().map(participantConversation -> {
             Conversation conversation = participantConversation.getConversation();
 
-            String conversationName = calculateConversationName(conversation, currentUser);
-            String conversationPicture = calculateConversationPicture(conversation, currentUser);
+            User targetUser = conversation.getParticipants().stream()
+                    .filter((p) -> !p.getUser().getId().equals(currentUser.getId()))
+                    .findFirst()
+                    .map(ChatParticipant::getUser)
+                    .orElse(null);
+
+
+            String conversationName = calculateConversationName(conversation, targetUser);
+            String conversationPicture = calculateConversationPicture(conversation, targetUser);
+
             if (conversation.getLastMessage() == null || conversation.getLastMessage().isEmpty()){
                 conversation.setLastMessage("No messages yet");
             }
             conversation.setConversationName(conversationName);
             conversation.setConversationPicture(conversationPicture);
-
-            return conversationMapper.toDto(conversation);
+            if (targetUser == null){
+                return conversationMapper.toDto(conversation, null);
+            }
+            return conversationMapper.toDto(conversation, targetUser.getUsername());
         }).collect(Collectors.toList());
     }
 
-    public List<MessageResponseDto> getHistoryOfConversation(Long conversationId, String username){
-        User currentUser = userRepository.findByUsername(username)
-            .orElseThrow(() -> new UserNotFoundException("User with username - " + username + " can't found"));
-        
-        Conversation conversation = conversationRepository.findById(conversationId)
-            .orElseThrow(() -> new ConversationNotFoundException("Conversation with id - " + conversationId + " can't found"));
-        
-        
-        if (!chatParticipantRepository.existsByUserIdAndConversationId(currentUser.getId(), conversationId)){
+    public List<MessageResponseDto> getHistoryOfConversation(Long conversationId, String username) {
+        User curUser = userRepository.findByUsername(username)
+                .orElseThrow(() -> new UserNotFoundException("User with username - " + username + " can't found"));
+
+
+        if (!chatParticipantRepository.existsByUserIdAndConversationId(curUser.getId(), conversationId)) {
             throw new AccessDeniedException("You are not a participant in this conversation");
         }
 
-        List<Message> historyOfMessages = messageRepository.findByConversationOrderBySentAtAsc(conversation);
+        Pageable pageable = PageRequest.of(0, 20);
+        Page<Message> historyOfMessages = messageRepository.findByConversationIdOrderBySentAtDesc(conversationId, pageable)
+                .orElseThrow(() -> new RuntimeException("Conversation doesn't exist"));
 
-        return historyOfMessages.stream().map(messageMapper::toDto).collect(Collectors.toList());
-        
-        
+        List<MessageResponseDto> historyOfMessagesDtos = historyOfMessages.getContent().stream()
+                .map(messageMapper::toDto)
+                .collect(Collectors.toList());
+        Collections.reverse(historyOfMessagesDtos);
+        return historyOfMessagesDtos;
+    }
+
+    public Long getOrCreatePrivateConversation(String curUsername, String targetUsername){
+        User curUser = userRepository.findByUsername(curUsername)
+                .orElseThrow(() -> new UserNotFoundException("User - " + curUsername + " not found"));
+        User targetUser = userRepository.findByUsername(targetUsername)
+                .orElseThrow(() -> new UserNotFoundException("User - " + targetUsername + " not found"));
+
+        Optional<Long> targetConversation = chatParticipantRepository.getConversationIdOfDialogue(curUser.getId(), targetUser.getId());
+
+        return targetConversation.orElseGet(() -> createPrivateConversation(curUser, targetUser));
 
     }
 
+    @Transactional
+    private Long createPrivateConversation(User curUser, User targetUser){
 
-    private String calculateConversationName(Conversation conversation, User currentUser){
+        Conversation newConversation = Conversation.builder()
+                .conversationType(ConversationType.PRIVATE)
+                .build();
+        conversationRepository.save(newConversation);
+
+        ChatParticipant curUserParticipant = ChatParticipant.builder()
+                .conversation(newConversation)
+                .user(curUser)
+                .build();
+        ChatParticipant targetUserParticipant = ChatParticipant.builder()
+                .conversation(newConversation)
+                .user(targetUser)
+                .build();
+        chatParticipantRepository.saveAll(List.of(curUserParticipant, targetUserParticipant));
+
+
+        return newConversation.getId();
+    }
+
+    private String calculateConversationName(Conversation conversation, User targetUser){
         if (conversation.getConversationType() == ConversationType.GROUP){
             return conversation.getConversationName();
         }
         else{
-            return conversation.getParticipants().stream()
-                    .filter(participant -> !participant.getUser().getId().equals(currentUser.getId()))
-                    .findFirst()
-                    .map(participant -> participant.getUser().getNickname())
-                    .orElse("Unknown User");
+            return targetUser.getNickname();
         }
     }
 
 
-    private String calculateConversationPicture(Conversation conversation, User currentUser){
+    private String calculateConversationPicture(Conversation conversation, User targetUser){
         // If it's a group then just return group name 
         if (conversation.getConversationType() == ConversationType.GROUP){
             if (conversation.getConversationPicture() == null || conversation.getConversationPicture().isEmpty()){
@@ -141,18 +188,14 @@ public class ConversationService {
             }
         }
 
-        User otherUser = conversation.getParticipants().stream()
-                .filter((p) -> !p.getUser().getId().equals(currentUser.getId()))
-                .findFirst()
-                .map(ChatParticipant::getUser)
-                .orElse(null);
 
-        if (otherUser != null){
-                if (otherUser.getProfilePicture() == null || otherUser.getProfilePicture().isEmpty()){
-                    return "https://ui-avatars.com/api/?name=" + otherUser.getNickname() + "&background=0D8ABC&color=fff";
+
+        if (targetUser != null){
+                if (targetUser.getProfilePicture() == null || targetUser.getProfilePicture().isEmpty()){
+                    return "https://ui-avatars.com/api/?name=" + targetUser.getNickname() + "&background=0D8ABC&color=fff";
                 }
                 else {
-                    return "/api/images/" + otherUser.getProfilePicture();
+                    return "/api/images/" + targetUser.getProfilePicture();
                 }
         }
         return "https://ui-avatars.com/api/?name=??";

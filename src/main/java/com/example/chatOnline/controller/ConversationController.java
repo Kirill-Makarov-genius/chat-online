@@ -5,7 +5,7 @@ import java.util.List;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.*;
 
 import com.example.chatOnline.dto.ConversationDto;
 import com.example.chatOnline.dto.MessageResponseDto;
@@ -14,9 +14,6 @@ import com.example.chatOnline.repository.MessageRepository;
 import com.example.chatOnline.service.ConversationService;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestParam;
 
 
 @Controller
@@ -26,7 +23,7 @@ public class ConversationController {
     private final ConversationService conversationService;
     private final ConversationRepository conversationRepository;
     private final MessageRepository messageRepository;
-    
+
 
 
     @GetMapping
@@ -45,17 +42,37 @@ public class ConversationController {
         String username = principal.getName();
         List<ConversationDto> conversations = conversationService.getAllUserConversation(username);
         //Mark active conversation for displaying it
-        conversations.forEach(conversation -> conversation.setActive(conversation.getId().equals(conversationId)));
-        
+        ConversationDto activeConvesation = null;
+        for (ConversationDto c : conversations){
+            if (c.getId().equals(conversationId)){
+                c.setActive(true);
+                activeConvesation = c;
+            }
+            else{
+                c.setActive(false);
+            }
+        }
         List<MessageResponseDto> historyOfConversation = conversationService.getHistoryOfConversation(conversationId, username);
 
         model.addAttribute("conversations", conversations);
-        model.addAttribute("activeConversationId", conversationId);
+        model.addAttribute("activeConversation", activeConvesation);
         model.addAttribute("chatHistory", historyOfConversation);
         model.addAttribute("username", username);
         
         return "chat-layout";
 
+    }
+
+    @PostMapping("/open")
+    public String createOrOpenConversation(@RequestParam String targetUsername,
+                                           Principal principal){
+        if (principal.getName().equals(targetUsername)){
+            return "redirect:/chats";
+        }
+
+        Long conversationId = conversationService.getOrCreatePrivateConversation(principal.getName(), targetUsername);
+
+        return "redirect:/chats/"+ conversationId;
     }
     
 }

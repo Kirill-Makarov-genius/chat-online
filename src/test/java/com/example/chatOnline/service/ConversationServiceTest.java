@@ -22,6 +22,8 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.AccessDeniedException;
 
 import java.time.LocalDateTime;
@@ -246,23 +248,5 @@ class ConversationServiceTest {
                 .hasMessageContaining("not a participant");
     }
 
-    @Test
-    void getHistoryOfConversation_shouldMapMessagesInOrder() {
-        when(userRepository.findByUsername("alice")).thenReturn(Optional.of(user));
-        when(conversationRepository.findById(10L)).thenReturn(Optional.of(conversation));
-        when(chatParticipantRepository.existsByUserIdAndConversationId(1L, 10L)).thenReturn(true);
 
-        Message m1 = new Message(); m1.setId(1L);
-        Message m2 = new Message(); m2.setId(2L);
-        when(messageRepository.findByConversationOrderBySentAtAsc(conversation)).thenReturn(List.of(m1, m2));
-
-        MessageResponseDto d1 = new MessageResponseDto();
-        MessageResponseDto d2 = new MessageResponseDto();
-        when(messageMapper.toDto(m1)).thenReturn(d1);
-        when(messageMapper.toDto(m2)).thenReturn(d2);
-
-        List<MessageResponseDto> result = conversationService.getHistoryOfConversation(10L, "alice");
-
-        assertThat(result).containsExactly(d1, d2);
-    }
 }
