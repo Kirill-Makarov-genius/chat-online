@@ -75,6 +75,7 @@ public class ConversationService {
         else{
             conversation.setLastMessage(message.getContent());
         }
+        conversation.setLastMessageAt(LocalDateTime.now());
         
         conversationRepository.save(conversation);
         Message savedMessage = messageRepository.save(message);

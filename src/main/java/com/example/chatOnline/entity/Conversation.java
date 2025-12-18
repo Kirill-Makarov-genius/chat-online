@@ -40,6 +40,7 @@ public class Conversation {
 
     private String lastMessage;
 
+    private LocalDateTime lastMessageAt;
     @Enumerated(EnumType.STRING)
     private ConversationType conversationType;
 

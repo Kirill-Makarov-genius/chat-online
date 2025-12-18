@@ -36,6 +36,7 @@ public interface ChatParticipantRepository extends JpaRepository<ChatParticipant
         JOIN FETCH p.conversation c
         LEFT JOIN FETCH c.participants
         WHERE p.user = :user
+        ORDER BY c.lastMessageAt DESC
 """)
     List<ChatParticipant> findAllConversationByUser(@Param("user") User user);
 }

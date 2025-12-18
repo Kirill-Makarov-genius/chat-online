@@ -101,6 +101,26 @@
             margin-top: auto;
         }
 
+        .msg-bubble {
+            padding: 8px 12px;
+            position: relative;
+            word-wrap: break-word;
+            min-width: 80px; /* Ensure enough space for text + time */
+        }
+
+        /* NEW: Time Styling */
+        .msg-time {
+            display: block; /* Moves it to a new line inside bubble, or use float */
+            font-size: 0.65rem;
+            margin-top: 4px;
+            text-align: right; /* Pushes to right */
+            opacity: 0.7; /* Make it slightly transparent */
+        }
+
+        /* Specific colors for Sent vs Received */
+        .message-sent .msg-time { color: #1f5c09; } /* Darker green text */
+        .message-received .msg-time { color: #888; } /* Grey text */
+
         /* --- VISUAL STYLES --- */
         .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         .hide-scrollbar::-webkit-scrollbar { display: none; }
@@ -224,6 +244,11 @@
 
                         <div class="msg-bubble">
                             <span th:text="${msg.content}">Message Content</span>
+                            <!-- NEW: Time Display -->
+                            <span class="msg-time"
+                                  th:text="${#temporals.format(msg.sentAt, 'HH:mm')}">
+                                12:00
+                            </span>
                         </div>
                     </div>
                 </div>
@@ -329,16 +354,16 @@
         div.classList.add('message-container');
         div.classList.add(isMe ? 'message-sent' : 'message-received');
 
-        // Build Name Link
-        var nameHtml = '';
-        if (!isMe) {
-            nameHtml = `<a href="/profile/users/${message.senderUsername}" class="sender-name text-decoration-none">${message.senderUsername}</a>`;
-        }
+        var nameHtml = !isMe ? `<a href="/profile/users/${message.senderUsername}" class="sender-name text-decoration-none">${message.senderUsername}</a>` : '';
+
+        // --- NEW: Format the time ---
+        var timeString = formatTime(message.sentAt);
 
         div.innerHTML = `
             ${nameHtml}
             <div class="msg-bubble">
                 <span>${message.content}</span>
+                <span class="msg-time">${timeString}</span>
             </div>
         `;
 
@@ -368,45 +393,45 @@
     }
 
     function loadOlderMessages() {
-    if (isLoading) return; // Don't fetch if already fetching
-    isLoading = true;
-    currentPage++; // Request the NEXT page (e.g., Page 1)
+        if (isLoading) return; // Don't fetch if already fetching
+        isLoading = true;
+        currentPage++; // Request the NEXT page (e.g., Page 1)
 
-    // 1. Capture current scroll height BEFORE adding content
-    // This is the "old" height of the content (e.g., 2000px)
-    var oldScrollHeight = messageArea.scrollHeight;
+        // 1. Capture current scroll height BEFORE adding content
+        // This is the "old" height of the content (e.g., 2000px)
+        var oldScrollHeight = messageArea.scrollHeight;
 
-    // 2. Fetch Data
-    fetch(`api/${conversationId}/history?page=${currentPage}`)
-        .then(response => response.json())
-        .then(messages => {
-            if (messages.length === 0) {
-                // No more messages exist
+        // 2. Fetch Data
+        fetch(`api/${conversationId}/history?page=${currentPage}`)
+            .then(response => response.json())
+            .then(messages => {
+                if (messages.length === 0) {
+                    // No more messages exist
+                    isLoading = false;
+                    return;
+                }
+
+                // 3. Prepend Messages to the top
+                // We loop nicely because the backend already reversed them (Oldest -> Newest)
+                // But since we are prepending, we want to add the NEWEST of this batch CLOSEST to the existing content.
+                // So we loop backwards through the received array.
+                for (var i = messages.length - 1; i >= 0; i--) {
+                    prependMessage(messages[i]);
+                }
+
+                // 4. RESTORE SCROLL POSITION (The Magic Fix)
+                // The browser naturally stays at "0", which is now the top of the NEW content.
+                // We want to jump down by exactly the height of the new content we added.
+                // New position = (New Total Height) - (Old Total Height)
+                messageArea.scrollTop = messageArea.scrollHeight - oldScrollHeight;
+
                 isLoading = false;
-                return;
-            }
-
-            // 3. Prepend Messages to the top
-            // We loop nicely because the backend already reversed them (Oldest -> Newest)
-            // But since we are prepending, we want to add the NEWEST of this batch CLOSEST to the existing content.
-            // So we loop backwards through the received array.
-            for (var i = messages.length - 1; i >= 0; i--) {
-                prependMessage(messages[i]);
-            }
-
-            // 4. RESTORE SCROLL POSITION (The Magic Fix)
-            // The browser naturally stays at "0", which is now the top of the NEW content.
-            // We want to jump down by exactly the height of the new content we added.
-            // New position = (New Total Height) - (Old Total Height)
-            messageArea.scrollTop = messageArea.scrollHeight - oldScrollHeight;
-
-            isLoading = false;
-        })
-        .catch(err => {
-            console.error("Failed to load history", err);
-            isLoading = false;
-            currentPage--; // Reset page on error
-        });
+            })
+            .catch(err => {
+                console.error("Failed to load history", err);
+                isLoading = false;
+                currentPage--; // Reset page on error
+            });
     }
 
     // Helper to create HTML and insert at TOP
@@ -419,15 +444,32 @@
 
         var nameHtml = !isMe ? `<a href="/profile/users/${message.senderUsername}" class="sender-name text-decoration-none">${message.senderUsername}</a>` : '';
 
+        // --- NEW: Format the time ---
+        // If message.sentAt exists, use it. Otherwise use current time.
+        var timeString = formatTime(message.sentAt);
+
         div.innerHTML = `
             ${nameHtml}
             <div class="msg-bubble">
                 <span>${message.content}</span>
+                <span class="msg-time">${timeString}</span>
             </div>
         `;
 
         // INSERT BEFORE the first child (Top)
         messageArea.insertBefore(div, messageArea.firstChild);
+    }
+
+    function formatTime(dateString) {
+        if (!dateString) return now();
+        var date = new Date(dateString);
+        // Returns format like "14:30"
+        return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    }
+
+    function now() {
+        var date = new Date();
+        return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     }
 </script>
 
