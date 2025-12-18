@@ -86,7 +86,7 @@ public class ConversationService {
         User currentUser = userRepository.findByUsername(username)
             .orElseThrow(() -> new UserNotFoundException("User with username - " + username + " doesn't exist"));
 
-        Set<ChatParticipant> chatParticipants = chatParticipantRepository.findAllByUser(currentUser);
+        List<ChatParticipant> chatParticipants = chatParticipantRepository.findAllConversationByUser(currentUser);
 
         return chatParticipants.stream().map(participantConversation -> {
             Conversation conversation = participantConversation.getConversation();
@@ -106,6 +106,7 @@ public class ConversationService {
             }
             conversation.setConversationName(conversationName);
             conversation.setConversationPicture(conversationPicture);
+
             if (targetUser == null){
                 return conversationMapper.toDto(conversation, null);
             }

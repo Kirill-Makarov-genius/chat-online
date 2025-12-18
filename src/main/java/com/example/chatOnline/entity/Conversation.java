@@ -3,6 +3,7 @@ package com.example.chatOnline.entity;
 import java.time.LocalDateTime;
 import java.util.Set;
 
+import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.CreationTimestamp;
 
 import com.example.chatOnline.enums.ConversationType;
@@ -47,7 +48,9 @@ public class Conversation {
     @OneToMany(mappedBy = "conversation", cascade = CascadeType.ALL)
     private Set<ChatParticipant> participants;
 
+    // Prevents N+1 queries without loading all history into memory
     @OneToMany(mappedBy = "conversation", cascade = CascadeType.ALL)
+    @BatchSize(size = 20)
     private Set<Message> messages;
 
     @CreationTimestamp
