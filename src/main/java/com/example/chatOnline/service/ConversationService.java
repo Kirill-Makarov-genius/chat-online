@@ -113,7 +113,7 @@ public class ConversationService {
         }).collect(Collectors.toList());
     }
 
-    public List<MessageResponseDto> getHistoryOfConversation(Long conversationId, String username) {
+    public List<MessageResponseDto> getHistoryOfConversation(Long conversationId, String username, int pageNumber, int pageSize) {
         User curUser = userRepository.findByUsername(username)
                 .orElseThrow(() -> new UserNotFoundException("User with username - " + username + " can't found"));
 
@@ -122,7 +122,7 @@ public class ConversationService {
             throw new AccessDeniedException("You are not a participant in this conversation");
         }
 
-        Pageable pageable = PageRequest.of(0, 20);
+        Pageable pageable = PageRequest.of(pageNumber, pageSize);
         Page<Message> historyOfMessages = messageRepository.findByConversationIdOrderBySentAtDesc(conversationId, pageable)
                 .orElseThrow(() -> new RuntimeException("Conversation doesn't exist"));
 

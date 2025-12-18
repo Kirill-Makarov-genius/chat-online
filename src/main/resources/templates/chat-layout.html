@@ -262,6 +262,8 @@
     var username = document.getElementById("currentUsername").value;
     var messageArea = document.getElementById("messageArea");
     var messageInput = document.getElementById("messageInput");
+    var currentPage = 0; // Track which page we are on
+    var isLoading = false; // Prevent double-fetching
 
     document.addEventListener("DOMContentLoaded", function() {
         scrollToBottom();
@@ -279,6 +281,16 @@
             });
             // Focus input on load
             messageInput.focus();
+        }
+
+        // ADD SCROLL LISTENER
+        if (messageArea) {
+            messageArea.addEventListener("scroll", function() {
+                // If user scrolls to the very top (scrollTop === 0)
+                if (messageArea.scrollTop === 0) {
+                    loadOlderMessages();
+                }
+            });
         }
     });
 
@@ -353,6 +365,69 @@
             chatItem.classList.add("fw-bold");
             setTimeout(() => chatItem.classList.remove("fw-bold"), 2000);
         }
+    }
+
+    function loadOlderMessages() {
+    if (isLoading) return; // Don't fetch if already fetching
+    isLoading = true;
+    currentPage++; // Request the NEXT page (e.g., Page 1)
+
+    // 1. Capture current scroll height BEFORE adding content
+    // This is the "old" height of the content (e.g., 2000px)
+    var oldScrollHeight = messageArea.scrollHeight;
+
+    // 2. Fetch Data
+    fetch(`api/${conversationId}/history?page=${currentPage}`)
+        .then(response => response.json())
+        .then(messages => {
+            if (messages.length === 0) {
+                // No more messages exist
+                isLoading = false;
+                return;
+            }
+
+            // 3. Prepend Messages to the top
+            // We loop nicely because the backend already reversed them (Oldest -> Newest)
+            // But since we are prepending, we want to add the NEWEST of this batch CLOSEST to the existing content.
+            // So we loop backwards through the received array.
+            for (var i = messages.length - 1; i >= 0; i--) {
+                prependMessage(messages[i]);
+            }
+
+            // 4. RESTORE SCROLL POSITION (The Magic Fix)
+            // The browser naturally stays at "0", which is now the top of the NEW content.
+            // We want to jump down by exactly the height of the new content we added.
+            // New position = (New Total Height) - (Old Total Height)
+            messageArea.scrollTop = messageArea.scrollHeight - oldScrollHeight;
+
+            isLoading = false;
+        })
+        .catch(err => {
+            console.error("Failed to load history", err);
+            isLoading = false;
+            currentPage--; // Reset page on error
+        });
+    }
+
+    // Helper to create HTML and insert at TOP
+    function prependMessage(message) {
+        var div = document.createElement('div');
+        var isMe = (message.senderUsername === username);
+
+        div.classList.add('message-container');
+        div.classList.add(isMe ? 'message-sent' : 'message-received');
+
+        var nameHtml = !isMe ? `<a href="/profile/users/${message.senderUsername}" class="sender-name text-decoration-none">${message.senderUsername}</a>` : '';
+
+        div.innerHTML = `
+            ${nameHtml}
+            <div class="msg-bubble">
+                <span>${message.content}</span>
+            </div>
+        `;
+
+        // INSERT BEFORE the first child (Top)
+        messageArea.insertBefore(div, messageArea.firstChild);
     }
 </script>
 

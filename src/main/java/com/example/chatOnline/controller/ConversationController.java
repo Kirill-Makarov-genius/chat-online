@@ -3,6 +3,8 @@ package com.example.chatOnline.controller;
 import java.security.Principal;
 import java.util.List;
 
+import com.example.chatOnline.entity.Message;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -52,7 +54,7 @@ public class ConversationController {
                 c.setActive(false);
             }
         }
-        List<MessageResponseDto> historyOfConversation = conversationService.getHistoryOfConversation(conversationId, username);
+        List<MessageResponseDto> historyOfConversation = conversationService.getHistoryOfConversation(conversationId, username, 0, 20);
 
         model.addAttribute("conversations", conversations);
         model.addAttribute("activeConversation", activeConvesation);
@@ -62,6 +64,21 @@ public class ConversationController {
         return "chat-layout";
 
     }
+
+    @GetMapping("/api/{conversationId}/history")
+    @ResponseBody
+    public ResponseEntity<List<MessageResponseDto>> getConversationHistory(
+            @PathVariable Long conversationId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size,
+            Principal principal){
+
+        List<MessageResponseDto> historyOfConversation = conversationService.getHistoryOfConversation(conversationId,
+                principal.getName(), page, size);
+
+        return ResponseEntity.ok(historyOfConversation);
+    }
+
 
     @PostMapping("/open")
     public String createOrOpenConversation(@RequestParam String targetUsername,
