@@ -1,28 +1,30 @@
 spring:
-    datasource:
-        url: jdbc:postgresql://localhost:5432/chat-db
-        username: postgres
-        password: new_password
-    jpa:           
-        show-sql: true
-        hibernate:
-            ddl-auto: update
-    servlet:
-      multipart:
-        max-file-size: -1
-        max-request-size: -1
-    mail:
-      host: smtp.gmail.com
-      port: 465
-      username: kiryushamakarov6@gmail.com
-      password: cejr nwau gtiy njcr
-      protocol: smtps
-      properties:
-        smtps:
-          auth: true
-          timeout: 5000
-          starttls:
-            enable: true
-            required: true
+  config:
+    import: optional:file:.env[.properties]
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USER}
+    password: ${DB_PASSWORD}
+  jpa:
+      show-sql: true
+      hibernate:
+          ddl-auto: update
+  servlet:
+    multipart:
+      max-file-size: -1
+      max-request-size: -1
+  mail:
+    host: ${MAIL_HOST}
+    port: ${MAIL_PORT}
+    username: ${MAIL_USERNAME}
+    password: ${MAIL_PASSWORD}
+    protocol: smtps
+    properties:
+      smtps:
+        auth: true
+        timeout: 5000
+        starttls:
+          enable: true
+          required: true
 file:
     upload-dir: uploads

@@ -8,158 +8,117 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
 
     <style>
-        /* --- LAYOUT SETUP --- */
-        body, html {
+        /* --- 1. GLOBAL LAYOUT LOCK --- */
+        html, body {
             height: 100%;
             margin: 0;
-            overflow: hidden; /* Prevent body scroll, handle inside divs */
+            overflow: hidden; /* CRITICAL: Prevents the browser window from scrolling */
             background-color: #f0f2f5;
         }
 
-        .main-row {
-            height: 100vh;
-
-        }
-
-        /* --- SCROLLBAR HIDING (Cross Browser) --- */
-        .hide-scrollbar {
-            -ms-overflow-style: none;  /* IE and Edge */
-            scrollbar-width: none;  /* Firefox */
-        }
-        .hide-scrollbar::-webkit-scrollbar {
-            display: none; /* Chrome, Safari, Opera */
-        }
-
-        /* --- SIDEBAR STYLES --- */
-        .sidebar {
-            background-color: white;
-            border-right: 1px solid #dee2e6;
-            display: flex;
-            flex-direction: column;
+        /* Force Bootstrap container to fill screen */
+        .container-fluid {
             height: 100%;
             padding: 0;
         }
 
+        .row.main-row {
+            height: 100%;
+            margin: 0; /* Remove Bootstrap negative margins */
+        }
+
+        /* --- 2. SIDEBAR (Left) --- */
+        .sidebar {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid #dee2e6;
+            background-color: white;
+            z-index: 1;
+        }
+
         .sidebar-header {
-            padding: 20px;
+            padding: 15px;
             border-bottom: 1px solid #f0f0f0;
+            flex-shrink: 0; /* Never shrink sidebar header */
         }
 
         .chat-list {
             flex-grow: 1;
-            overflow-y: auto;
+            overflow-y: auto; /* Independent scrolling */
+            min-height: 0;    /* Firefox Flexbox fix */
         }
 
-        .conversation-item {
-            border: none;
-            border-bottom: 1px solid #f8f9fa;
-            cursor: pointer;
-            transition: background 0.2s;
-            padding: 15px 20px;
-        }
-
-        .conversation-item:hover {
-            background-color: #f5f5f5;
-        }
-
-        .conversation-item.active {
-            background-color: #e7f1ff;
-            border-left: 4px solid #0d6efd;
-        }
-
-        .avatar-img {
-            width: 45px;
-            height: 45px;
-            object-fit: cover;
-            border-radius: 50%;
-            border: 1px solid #dee2e6;
-        }
-
-        /* --- CHAT AREA STYLES --- */
-        .chat-area {
-            display: flex;
-            flex-direction: column;
+        /* --- 3. CHAT AREA (Right) --- */
+        /* Target the column wrapper */
+        .chat-column {
             height: 100%;
-            background-color: #efeae2; /* WhatsApp-like generic bg */
-            /* background-image: url('path-to-pattern.png'); Optional */
+            padding: 0; /* Remove Bootstrap padding */
         }
 
+        .chat-area {
+            height: 100%;
+            display: flex;
+            flex-direction: column; /* Vertical Stack */
+            background-color: #efeae2;
+            position: relative;
+        }
+
+        /* --- 4. HEADER & FOOTER (Fixed) --- */
         .chat-header {
-            background-color: white;
-            padding: 10px 20px;
-            border-bottom: 1px solid #dee2e6;
+            height: 60px;
+            flex-shrink: 0; /* CRITICAL: Never collapse */
             display: flex;
             align-items: center;
-            height: 60px;
+            background-color: white;
+            border-bottom: 1px solid #dee2e6;
+            padding: 0 20px;
         }
 
+        .chat-footer {
+            height: 70px;
+            flex-shrink: 0; /* CRITICAL: Never collapse input area */
+            display: flex;
+            align-items: center;
+            background-color: #f0f0f0;
+            padding: 0 20px;
+        }
+
+        /* --- 5. SCROLLABLE MESSAGES (Middle) --- */
         .messages-box {
-            flex-grow: 1;
-            padding: 20px;
-            overflow-y: auto;
+            flex-grow: 1;     /* Take all remaining height */
+            overflow-y: auto; /* Scroll ONLY here */
             display: flex;
             flex-direction: column;
+            padding: 20px;
+
+            /* THE MAGIC FIX: Allows scrollbar to appear */
+            min-height: 0;
         }
 
-        /* Pushes messages to bottom if there are few */
+        /* Push messages to bottom if conversation is short */
         .messages-box > :first-child {
             margin-top: auto;
         }
 
-        .chat-footer {
-            background-color: #f0f0f0;
-            padding: 10px 20px;
-            height: 70px;
-            display: flex;
-            align-items: center;
-        }
+        /* --- VISUAL STYLES --- */
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
 
-        /* --- MESSAGE BUBBLES --- */
-        .message-container {
-            display: flex;
-            flex-direction: column;
-            margin-bottom: 8px;
-            max-width: 70%;
-        }
+        .conversation-item { padding: 15px; border-bottom: 1px solid #f9f9f9; cursor: pointer; }
+        .conversation-item:hover { background-color: #f5f5f5; }
+        .conversation-item.active { background-color: #e7f1ff; border-left: 4px solid #0d6efd; }
+        .avatar-img { width: 45px; height: 45px; object-fit: cover; border-radius: 50%; }
 
-        /* RECEIVED (Left) */
-        .message-received {
-            align-self: flex-start;
-            align-items: flex-start;
-        }
-        .message-received .msg-bubble {
-            background-color: white;
-            color: #303030;
-            border-radius: 0 12px 12px 12px;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
-        }
+        .message-container { max-width: 70%; margin-bottom: 10px; display: flex; flex-direction: column; flex-shrink: 0; }
+        .message-sent { align-self: flex-end; align-items: flex-end; }
+        .message-received { align-self: flex-start; align-items: flex-start; }
 
-        /* SENT (Right) */
-        .message-sent {
-            align-self: flex-end;
-            align-items: flex-end;
-        }
-        .message-sent .msg-bubble {
-            background-color: #d9fdd3; /* Light Green */
-            color: black;
-            border-radius: 12px 0 12px 12px;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
-        }
+        .msg-bubble { padding: 8px 12px; border-radius: 12px; position: relative; word-wrap: break-word; }
+        .message-sent .msg-bubble { background-color: #d9fdd3; color: black; border-bottom-right-radius: 0; }
+        .message-received .msg-bubble { background-color: white; color: black; border-bottom-left-radius: 0; }
 
-        .msg-bubble {
-            padding: 8px 12px;
-            position: relative;
-            word-wrap: break-word;
-            font-size: 0.95rem;
-        }
-
-        .sender-name {
-            font-size: 0.75rem;
-            color: #d63384; /* Distinct color for names */
-            margin-bottom: 2px;
-            margin-left: 2px;
-            font-weight: 600;
-        }
+        .sender-name { font-size: 0.75rem; color: #d63384; font-weight: 600; margin-bottom: 2px; margin-left: 5px;}
     </style>
 </head>
 <body>
@@ -168,12 +127,11 @@
     <div class="row main-row">
 
         <!-- ================= SIDEBAR ================= -->
-        <div class="col-md-4 col-lg-3 sidebar">
+        <div class="col-md-4 col-lg-3 sidebar p-0">
 
             <!-- HEADER -->
             <div class="sidebar-header d-flex justify-content-between align-items-center">
-
-                <a href="/" class="btn btn-light btn-sm rounded-circle" title="Chats">
+                <a href="/" class="btn btn-light btn-sm rounded-circle text-decoration-none" title="Home">
                     <h4 class="mb-0 fw-bold text-primary">Chats</h4>
                 </a>
                 <div class="btn-group">
@@ -189,7 +147,7 @@
             </div>
 
             <!-- SEARCH (Visual Only) -->
-            <div class="p-2">
+            <div class="p-2 flex-shrink-0">
                 <input type="text" class="form-control form-control-sm bg-light border-0" placeholder="Search or start new chat">
             </div>
 
@@ -210,12 +168,10 @@
                         <!-- Text Info -->
                         <div class="ms-3 overflow-hidden w-100">
                             <div class="d-flex justify-content-between align-items-center">
-                                <h6 class="mb-0 text-truncate" th:text="${chat.conversationName}">User Name</h6>
-                                <!-- Optional: You can add time here if you have it in DTO -->
-                                <!-- <small class="text-muted" style="font-size: 0.7rem;">12:30</small> -->
+                                <h6 class="mb-0 text-truncate" th:text="${chat.conversationName}">Name</h6>
                             </div>
                             <small class="text-muted text-truncate d-block last-message" th:text="${chat.lastMessage}">
-                                Last message content...
+                                Last message...
                             </small>
                         </div>
                     </div>
@@ -224,7 +180,7 @@
         </div>
 
         <!-- ================= MAIN CHAT AREA ================= -->
-        <div class="col-md-8 col-lg-9 p-0">
+        <div class="col-md-8 col-lg-9 chat-column">
 
             <!-- SCENARIO A: NO CHAT SELECTED -->
             <div th:if="${activeConversation == null}" class="d-flex flex-column justify-content-center align-items-center h-100" style="background-color: #f0f2f5;">
@@ -240,54 +196,42 @@
 
                 <!-- 1. CHAT HEADER -->
                 <div class="chat-header shadow-sm">
-
-                    <!-- WRAP IN LINK -->
-                    <a th:href="@{/profile/users/{username}(username=${activeConversation.getTargetUsername()})}"
+                    <a th:href="@{/profile/users/{username}(username=${activeConversation.targetUsername})}"
                        class="d-flex align-items-center text-decoration-none text-dark">
 
-                        <!-- Avatar -->
-                        <img th:src="${activeConversation.getConversationPicture()}"
+                        <img th:src="${activeConversation.conversationPicture}"
                              class="rounded-circle me-2 border"
                              style="width: 40px; height: 40px; object-fit: cover;"
                              alt="Avatar">
 
-                        <!-- Name -->
                         <div>
-                            <h6 class="mb-0" th:text="${activeConversation.getTargetUsername()}">Chat Name</h6>
+                            <h6 class="mb-0" th:text="${activeConversation.targetUsername}">Name</h6>
                             <small class="text-muted">View Profile</small>
                         </div>
                     </a>
-
                 </div>
 
                 <!-- 2. MESSAGES FEED -->
                 <div id="messageArea" class="messages-box hide-scrollbar">
-
-                    <!-- Loop History -->
                     <div th:each="msg : ${chatHistory}"
                          class="message-container"
                          th:classappend="${msg.senderUsername == username} ? 'message-sent' : 'message-received'">
 
-                        <!-- Sender Name (Only for received messages) -->
-                        <span class="sender-name"
-                              th:if="${msg.senderUsername != username}"
-                              th:text="${msg.senderUsername}">Name</span>
+                        <a th:if="${msg.senderUsername != username}"
+                           th:href="@{/profile/users/{uid}(uid=${msg.senderUsername})}"
+                           class="sender-name text-decoration-none"
+                           th:text="${msg.senderUsername}">Name</a>
 
-                        <!-- Bubble -->
                         <div class="msg-bubble">
                             <span th:text="${msg.content}">Message Content</span>
-                            <!-- Time (Optional) -->
-                            <!-- <span class="text-muted ms-2" style="font-size:0.65rem; float:right; margin-top:5px;">10:00</span> -->
                         </div>
                     </div>
-
                 </div>
 
-                <!-- 3. INPUT FOOTER -->
+                <!-- 3. INPUT FOOTER (Fixed at bottom) -->
                 <div class="chat-footer">
                     <div class="input-group">
                         <button class="btn btn-light text-secondary" type="button"><i class="bi bi-emoji-smile"></i></button>
-                        <button class="btn btn-light text-secondary" type="button"><i class="bi bi-paperclip"></i></button>
 
                         <input type="text" id="messageInput" class="form-control border-0 bg-white" placeholder="Type a message..." autocomplete="off">
 
@@ -305,7 +249,6 @@
 <!-- HIDDEN DATA FOR JS -->
 <input type="hidden" id="currentConversationId"
        th:value="${activeConversation != null ? activeConversation.getId() : ''}">
-
 <input type="hidden" id="currentUsername" th:value="${username}">
 
 <!-- SCRIPTS -->
@@ -320,17 +263,13 @@
     var messageArea = document.getElementById("messageArea");
     var messageInput = document.getElementById("messageInput");
 
-    // --- INITIALIZATION ---
     document.addEventListener("DOMContentLoaded", function() {
-        // 1. Scroll to bottom
         scrollToBottom();
 
-        // 2. Connect WebSocket
         if (conversationId) {
             connect();
         }
 
-        // 3. Enter Key Listener
         if (messageInput) {
             messageInput.addEventListener("keypress", function(event) {
                 if (event.key === "Enter") {
@@ -338,14 +277,15 @@
                     sendMessage();
                 }
             });
+            // Focus input on load
+            messageInput.focus();
         }
     });
 
-    // --- WEBSOCKET CONNECTION ---
     function connect() {
         var socket = new SockJS('/ws');
         stompClient = Stomp.over(socket);
-        stompClient.debug = null; // Disable debug logs
+        // stompClient.debug = null; // Uncomment to hide debug logs
 
         stompClient.connect({}, function (frame) {
             console.log('Connected: ' + frame);
@@ -355,7 +295,6 @@
         });
     }
 
-    // --- SEND MESSAGE ---
     function sendMessage() {
         var content = messageInput.value.trim();
         if(content && stompClient) {
@@ -364,26 +303,26 @@
                 conversationId: conversationId
             };
             stompClient.send("/app/conversation/" + conversationId + "/sendMessage", {}, JSON.stringify(chatMessage));
-            messageInput.value = ''; // Clear input
+            messageInput.value = '';
             messageInput.focus();
         }
     }
 
-    // --- DISPLAY MESSAGE ---
     function showIncomingMessage(message) {
         if (!messageArea) return;
 
         var div = document.createElement('div');
         var isMe = (message.senderUsername === username);
 
-        // Add Classes
         div.classList.add('message-container');
         div.classList.add(isMe ? 'message-sent' : 'message-received');
 
-        // Build Name HTML (Only for others)
-        var nameHtml = !isMe ? `<span class="sender-name">${message.senderUsername}</span>` : '';
+        // Build Name Link
+        var nameHtml = '';
+        if (!isMe) {
+            nameHtml = `<a href="/profile/users/${message.senderUsername}" class="sender-name text-decoration-none">${message.senderUsername}</a>`;
+        }
 
-        // Build Bubble HTML
         div.innerHTML = `
             ${nameHtml}
             <div class="msg-bubble">
@@ -396,7 +335,6 @@
         updateSidebarPreview(message);
     }
 
-    // --- HELPERS ---
     function scrollToBottom() {
         if (messageArea) {
             messageArea.scrollTop = messageArea.scrollHeight;
@@ -404,7 +342,6 @@
     }
 
     function updateSidebarPreview(message) {
-        // Find chat in sidebar
         var chatItem = document.querySelector(`[data-conversation-id="${message.conversationId}"]`);
         if (chatItem) {
             var preview = chatItem.querySelector('.last-message');
@@ -412,9 +349,7 @@
                 var prefix = (message.senderUsername === username) ? "You: " : "";
                 preview.innerText = prefix + message.content;
             }
-            // Move to top
             chatItem.parentElement.prepend(chatItem);
-            // Highlight
             chatItem.classList.add("fw-bold");
             setTimeout(() => chatItem.classList.remove("fw-bold"), 2000);
         }
