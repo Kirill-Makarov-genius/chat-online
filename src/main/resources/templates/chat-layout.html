@@ -12,19 +12,14 @@
         html, body {
             height: 100%;
             margin: 0;
-            overflow: hidden; /* CRITICAL: Prevents the browser window from scrolling */
+            overflow: hidden;
             background-color: #f0f2f5;
         }
 
-        /* Force Bootstrap container to fill screen */
-        .container-fluid {
+        .container-fluid, .row.main-row {
             height: 100%;
             padding: 0;
-        }
-
-        .row.main-row {
-            height: 100%;
-            margin: 0; /* Remove Bootstrap negative margins */
+            margin: 0;
         }
 
         /* --- 2. SIDEBAR (Left) --- */
@@ -40,26 +35,25 @@
         .sidebar-header {
             padding: 15px;
             border-bottom: 1px solid #f0f0f0;
-            flex-shrink: 0; /* Never shrink sidebar header */
+            flex-shrink: 0;
         }
 
         .chat-list {
             flex-grow: 1;
-            overflow-y: auto; /* Independent scrolling */
-            min-height: 0;    /* Firefox Flexbox fix */
+            overflow-y: auto;
+            min-height: 0;
         }
 
         /* --- 3. CHAT AREA (Right) --- */
-        /* Target the column wrapper */
         .chat-column {
             height: 100%;
-            padding: 0; /* Remove Bootstrap padding */
+            padding: 0;
         }
 
         .chat-area {
             height: 100%;
             display: flex;
-            flex-direction: column; /* Vertical Stack */
+            flex-direction: column;
             background-color: #efeae2;
             position: relative;
         }
@@ -67,7 +61,7 @@
         /* --- 4. HEADER & FOOTER (Fixed) --- */
         .chat-header {
             height: 60px;
-            flex-shrink: 0; /* CRITICAL: Never collapse */
+            flex-shrink: 0;
             display: flex;
             align-items: center;
             background-color: white;
@@ -77,26 +71,23 @@
 
         .chat-footer {
             height: 70px;
-            flex-shrink: 0; /* CRITICAL: Never collapse input area */
+            flex-shrink: 0;
             display: flex;
             align-items: center;
             background-color: #f0f0f0;
             padding: 0 20px;
         }
 
-        /* --- 5. SCROLLABLE MESSAGES (Middle) --- */
+        /* --- 5. SCROLLABLE MESSAGES --- */
         .messages-box {
-            flex-grow: 1;     /* Take all remaining height */
-            overflow-y: auto; /* Scroll ONLY here */
+            flex-grow: 1;
+            overflow-y: auto;
             display: flex;
             flex-direction: column;
             padding: 20px;
-
-            /* THE MAGIC FIX: Allows scrollbar to appear */
             min-height: 0;
         }
 
-        /* Push messages to bottom if conversation is short */
         .messages-box > :first-child {
             margin-top: auto;
         }
@@ -105,21 +96,19 @@
             padding: 8px 12px;
             position: relative;
             word-wrap: break-word;
-            min-width: 80px; /* Ensure enough space for text + time */
+            min-width: 80px;
         }
 
-        /* NEW: Time Styling */
         .msg-time {
-            display: block; /* Moves it to a new line inside bubble, or use float */
+            display: block;
             font-size: 0.65rem;
             margin-top: 4px;
-            text-align: right; /* Pushes to right */
-            opacity: 0.7; /* Make it slightly transparent */
+            text-align: right;
+            opacity: 0.7;
         }
 
-        /* Specific colors for Sent vs Received */
-        .message-sent .msg-time { color: #1f5c09; } /* Darker green text */
-        .message-received .msg-time { color: #888; } /* Grey text */
+        .message-sent .msg-time { color: #1f5c09; }
+        .message-received .msg-time { color: #888; }
 
         /* --- VISUAL STYLES --- */
         .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
@@ -134,11 +123,14 @@
         .message-sent { align-self: flex-end; align-items: flex-end; }
         .message-received { align-self: flex-start; align-items: flex-start; }
 
-        .msg-bubble { padding: 8px 12px; border-radius: 12px; position: relative; word-wrap: break-word; }
         .message-sent .msg-bubble { background-color: #d9fdd3; color: black; border-bottom-right-radius: 0; }
         .message-received .msg-bubble { background-color: white; color: black; border-bottom-left-radius: 0; }
 
         .sender-name { font-size: 0.75rem; color: #d63384; font-weight: 600; margin-bottom: 2px; margin-left: 5px;}
+
+        /* Dropdown custom style */
+        .notification-dropdown { width: 300px; max-height: 400px; overflow-y: auto; }
+        .notification-item { white-space: normal; } /* Allow text wrap */
     </style>
 </head>
 <body>
@@ -151,24 +143,58 @@
 
             <!-- HEADER -->
             <div class="sidebar-header d-flex justify-content-between align-items-center">
-                <a href="/" class="btn btn-light btn-sm rounded-circle text-decoration-none" title="Home">
+                <a href="/chats" class="btn btn-light btn-sm rounded-circle text-decoration-none" title="Home">
                     <h4 class="mb-0 fw-bold text-primary">Chats</h4>
                 </a>
-                <div class="btn-group">
-                    <a href="/profile" class="btn btn-light btn-sm rounded-circle" title="Settings">
-                        <i class="bi bi-gear-fill text-secondary"></i>
-                    </a>
-                    <form th:action="@{/logout}" method="post" class="d-inline ms-1">
-                        <button type="submit" class="btn btn-light btn-sm rounded-circle" title="Logout">
-                            <i class="bi bi-box-arrow-right text-danger"></i>
+
+                <div class="d-flex align-items-center">
+
+                    <!-- === NEW: NOTIFICATION BUTTON === -->
+                    <div class="dropdown me-1">
+                        <button class="btn btn-light btn-sm rounded-circle position-relative" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-bell-fill text-secondary"></i>
+
+                            <!-- Red Badge (Hidden if count is 0) -->
+                            <span id="notificationBadge"
+                                  class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
+                                  style="font-size: 0.6rem; display: none;">
+                                0
+                            </span>
                         </button>
-                    </form>
+
+                        <ul class="dropdown-menu dropdown-menu-end shadow p-0 notification-dropdown" id="notificationList">
+                            <li><h6 class="dropdown-header">Notifications</h6></li>
+
+                            <!-- Unread notifications would be loaded here from Controller if passed -->
+                            <!-- Dynamic items will be added via JS -->
+
+                            <!-- Empty State -->
+                            <li id="no-notif-msg" class="text-center p-3 text-muted small">
+                                No new notifications
+                            </li>
+                        </ul>
+                    </div>
+                    <!-- ================================== -->
+
+                    <div class="btn-group">
+                        <a href="/profile" class="btn btn-light btn-sm rounded-circle" title="Settings">
+                            <i class="bi bi-gear-fill text-secondary"></i>
+                        </a>
+                        <form th:action="@{/logout}" method="post" class="d-inline ms-1">
+                            <button type="submit" class="btn btn-light btn-sm rounded-circle" title="Logout">
+                                <i class="bi bi-box-arrow-right text-danger"></i>
+                            </button>
+                        </form>
+                    </div>
                 </div>
             </div>
 
-            <!-- SEARCH (Visual Only) -->
+            <!-- SEARCH -->
             <div class="p-2 flex-shrink-0">
-                <input type="text" class="form-control form-control-sm bg-light border-0" placeholder="Search or start new chat">
+                <form action="/chats/open" method="post" class="d-flex">
+                    <input type="text" name="targetUsername" class="form-control form-control-sm bg-light border-0 me-1" placeholder="Find user (enter username)..." required>
+                    <button type="submit" class="btn btn-sm btn-primary"><i class="bi bi-plus"></i></button>
+                </form>
             </div>
 
             <!-- CONVERSATION LIST -->
@@ -180,12 +206,9 @@
                    th:classappend="${chat.active} ? 'active' : ''">
 
                     <div class="d-flex align-items-center">
-                        <!-- Avatar -->
                         <div class="position-relative">
                             <img th:src="${chat.conversationPicture}" alt="Avatar" class="avatar-img">
                         </div>
-
-                        <!-- Text Info -->
                         <div class="ms-3 overflow-hidden w-100">
                             <div class="d-flex justify-content-between align-items-center">
                                 <h6 class="mb-0 text-truncate" th:text="${chat.conversationName}">Name</h6>
@@ -213,17 +236,10 @@
 
             <!-- SCENARIO B: ACTIVE CHAT -->
             <div th:if="${activeConversation != null}" class="chat-area">
-
-                <!-- 1. CHAT HEADER -->
                 <div class="chat-header shadow-sm">
                     <a th:href="@{/profile/users/{username}(username=${activeConversation.targetUsername})}"
                        class="d-flex align-items-center text-decoration-none text-dark">
-
-                        <img th:src="${activeConversation.conversationPicture}"
-                             class="rounded-circle me-2 border"
-                             style="width: 40px; height: 40px; object-fit: cover;"
-                             alt="Avatar">
-
+                        <img th:src="${activeConversation.conversationPicture}" class="rounded-circle me-2 border" style="width: 40px; height: 40px; object-fit: cover;" alt="Avatar">
                         <div>
                             <h6 class="mb-0" th:text="${activeConversation.targetUsername}">Name</h6>
                             <small class="text-muted">View Profile</small>
@@ -231,49 +247,34 @@
                     </a>
                 </div>
 
-                <!-- 2. MESSAGES FEED -->
                 <div id="messageArea" class="messages-box hide-scrollbar">
                     <div th:each="msg : ${chatHistory}"
                          class="message-container"
                          th:classappend="${msg.senderUsername == username} ? 'message-sent' : 'message-received'">
-
                         <a th:if="${msg.senderUsername != username}"
                            th:href="@{/profile/users/{uid}(uid=${msg.senderUsername})}"
-                           class="sender-name text-decoration-none"
-                           th:text="${msg.senderUsername}">Name</a>
-
+                           class="sender-name text-decoration-none" th:text="${msg.senderUsername}">Name</a>
                         <div class="msg-bubble">
                             <span th:text="${msg.content}">Message Content</span>
-                            <!-- NEW: Time Display -->
-                            <span class="msg-time"
-                                  th:text="${#temporals.format(msg.sentAt, 'HH:mm')}">
-                                12:00
-                            </span>
+                            <span class="msg-time" th:text="${#temporals.format(msg.sentAt, 'HH:mm')}">12:00</span>
                         </div>
                     </div>
                 </div>
 
-                <!-- 3. INPUT FOOTER (Fixed at bottom) -->
                 <div class="chat-footer">
                     <div class="input-group">
                         <button class="btn btn-light text-secondary" type="button"><i class="bi bi-emoji-smile"></i></button>
-
                         <input type="text" id="messageInput" class="form-control border-0 bg-white" placeholder="Type a message..." autocomplete="off">
-
-                        <button class="btn btn-primary" onclick="sendMessage()">
-                            <i class="bi bi-send-fill"></i>
-                        </button>
+                        <button class="btn btn-primary" onclick="sendMessage()"><i class="bi bi-send-fill"></i></button>
                     </div>
                 </div>
-
             </div>
         </div>
     </div>
 </div>
 
-<!-- HIDDEN DATA FOR JS -->
-<input type="hidden" id="currentConversationId"
-       th:value="${activeConversation != null ? activeConversation.getId() : ''}">
+<!-- HIDDEN DATA -->
+<input type="hidden" id="currentConversationId" th:value="${activeConversation != null ? activeConversation.id : ''}">
 <input type="hidden" id="currentUsername" th:value="${username}">
 
 <!-- SCRIPTS -->
@@ -287,15 +288,14 @@
     var username = document.getElementById("currentUsername").value;
     var messageArea = document.getElementById("messageArea");
     var messageInput = document.getElementById("messageInput");
-    var currentPage = 0; // Track which page we are on
-    var isLoading = false; // Prevent double-fetching
+    var currentPage = 0;
+    var isLoading = false;
 
     document.addEventListener("DOMContentLoaded", function() {
         scrollToBottom();
 
-        if (conversationId) {
-            connect();
-        }
+        // Always connect to listen for notifications
+        connect();
 
         if (messageInput) {
             messageInput.addEventListener("keypress", function(event) {
@@ -304,17 +304,12 @@
                     sendMessage();
                 }
             });
-            // Focus input on load
             messageInput.focus();
         }
 
-        // ADD SCROLL LISTENER
         if (messageArea) {
             messageArea.addEventListener("scroll", function() {
-                // If user scrolls to the very top (scrollTop === 0)
-                if (messageArea.scrollTop === 0) {
-                    loadOlderMessages();
-                }
+                if (messageArea.scrollTop === 0) loadOlderMessages();
             });
         }
     });
@@ -322,14 +317,56 @@
     function connect() {
         var socket = new SockJS('/ws');
         stompClient = Stomp.over(socket);
-        // stompClient.debug = null; // Uncomment to hide debug logs
+        stompClient.debug = null;
 
         stompClient.connect({}, function (frame) {
             console.log('Connected: ' + frame);
-            stompClient.subscribe('/topic/conversation/' + conversationId, function (result) {
-                showIncomingMessage(JSON.parse(result.body));
+
+            // 1. Subscribe to Chat (If active)
+            if (conversationId) {
+                stompClient.subscribe('/topic/conversation/' + conversationId, function (result) {
+                    showIncomingMessage(JSON.parse(result.body));
+                });
+            }
+
+            // 2. Subscribe to Notifications (Global)
+            stompClient.subscribe('/user/queue/notifications', function (result) {
+                addNotificationToUI(JSON.parse(result.body));
             });
         });
+    }
+
+    // --- NEW: Handle Notification UI ---
+    function addNotificationToUI(notif) {
+        // If I am currently in the chat sending the notification, ignore it
+        if (conversationId && conversationId == notif.conversationId) return;
+
+        var list = document.getElementById("notificationList");
+        var badge = document.getElementById("notificationBadge");
+        var noMsg = document.getElementById("no-notif-msg");
+
+        if (noMsg) noMsg.style.display = 'none';
+
+        var li = document.createElement("li");
+        li.innerHTML = `
+            <a class="dropdown-item d-flex align-items-start p-2 border-bottom notification-item" href="/chats/${notif.conversationId}">
+                <div class="flex-grow-1">
+                    <p class="mb-0 small fw-bold">${notif.senderUsername}: ${notif.content.substring(0, 20)}...</p>
+                    <small class="text-muted" style="font-size: 0.65rem;">Just now</small>
+                </div>
+                <span class="badge bg-primary rounded-pill p-1" style="font-size: 0.5rem;">●</span>
+            </a>
+        `;
+
+        // Insert after header
+        list.insertBefore(li, list.children[1]);
+
+        // Update Badge Count
+        if (badge) {
+            var count = parseInt(badge.innerText) || 0;
+            badge.innerText = count + 1;
+            badge.style.display = 'block'; // Show badge
+        }
     }
 
     function sendMessage() {
@@ -347,16 +384,11 @@
 
     function showIncomingMessage(message) {
         if (!messageArea) return;
-
         var div = document.createElement('div');
         var isMe = (message.senderUsername === username);
-
         div.classList.add('message-container');
         div.classList.add(isMe ? 'message-sent' : 'message-received');
-
         var nameHtml = !isMe ? `<a href="/profile/users/${message.senderUsername}" class="sender-name text-decoration-none">${message.senderUsername}</a>` : '';
-
-        // --- NEW: Format the time ---
         var timeString = formatTime(message.sentAt);
 
         div.innerHTML = `
@@ -366,7 +398,6 @@
                 <span class="msg-time">${timeString}</span>
             </div>
         `;
-
         messageArea.appendChild(div);
         scrollToBottom();
         updateSidebarPreview(message);
@@ -393,59 +424,37 @@
     }
 
     function loadOlderMessages() {
-        if (isLoading) return; // Don't fetch if already fetching
+        if (isLoading) return;
         isLoading = true;
-        currentPage++; // Request the NEXT page (e.g., Page 1)
-
-        // 1. Capture current scroll height BEFORE adding content
-        // This is the "old" height of the content (e.g., 2000px)
+        currentPage++;
         var oldScrollHeight = messageArea.scrollHeight;
 
-        // 2. Fetch Data
+        // Note: Your controller has mapped this to "/chats/api/{id}/history" due to Class level mapping
         fetch(`api/${conversationId}/history?page=${currentPage}`)
             .then(response => response.json())
             .then(messages => {
                 if (messages.length === 0) {
-                    // No more messages exist
                     isLoading = false;
                     return;
                 }
-
-                // 3. Prepend Messages to the top
-                // We loop nicely because the backend already reversed them (Oldest -> Newest)
-                // But since we are prepending, we want to add the NEWEST of this batch CLOSEST to the existing content.
-                // So we loop backwards through the received array.
                 for (var i = messages.length - 1; i >= 0; i--) {
                     prependMessage(messages[i]);
                 }
-
-                // 4. RESTORE SCROLL POSITION (The Magic Fix)
-                // The browser naturally stays at "0", which is now the top of the NEW content.
-                // We want to jump down by exactly the height of the new content we added.
-                // New position = (New Total Height) - (Old Total Height)
                 messageArea.scrollTop = messageArea.scrollHeight - oldScrollHeight;
-
                 isLoading = false;
             })
             .catch(err => {
-                console.error("Failed to load history", err);
                 isLoading = false;
-                currentPage--; // Reset page on error
+                currentPage--;
             });
     }
 
-    // Helper to create HTML and insert at TOP
     function prependMessage(message) {
         var div = document.createElement('div');
         var isMe = (message.senderUsername === username);
-
         div.classList.add('message-container');
         div.classList.add(isMe ? 'message-sent' : 'message-received');
-
         var nameHtml = !isMe ? `<a href="/profile/users/${message.senderUsername}" class="sender-name text-decoration-none">${message.senderUsername}</a>` : '';
-
-        // --- NEW: Format the time ---
-        // If message.sentAt exists, use it. Otherwise use current time.
         var timeString = formatTime(message.sentAt);
 
         div.innerHTML = `
@@ -455,15 +464,12 @@
                 <span class="msg-time">${timeString}</span>
             </div>
         `;
-
-        // INSERT BEFORE the first child (Top)
         messageArea.insertBefore(div, messageArea.firstChild);
     }
 
     function formatTime(dateString) {
         if (!dateString) return now();
         var date = new Date(dateString);
-        // Returns format like "14:30"
         return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     }
 

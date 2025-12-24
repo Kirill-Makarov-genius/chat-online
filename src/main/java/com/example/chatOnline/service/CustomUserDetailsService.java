@@ -1,13 +1,10 @@
 package com.example.chatOnline.service;
 
-import java.util.Collection;
-import java.util.Collections;
+
 
 import com.example.chatOnline.dto.UserDto;
 import com.example.chatOnline.exception.UserNotFoundException;
 import com.example.chatOnline.mapper.UserMapper;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.resilience.annotation.RetryAnnotationBeanPostProcessor;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;

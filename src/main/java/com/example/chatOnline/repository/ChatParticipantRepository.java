@@ -2,7 +2,6 @@ package com.example.chatOnline.repository;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -18,6 +17,10 @@ import com.example.chatOnline.entity.User;
 public interface ChatParticipantRepository extends JpaRepository<ChatParticipant, Long>{
 
     boolean existsByUserIdAndConversationId(Long userId, Long conversationId);
+
+    @Query("SELECT p.user FROM ChatParticipant p WHERE p.conversation.id=:conversationId")
+    List<User> findUsersByConversationId(@Param("conversationId") Long conversationId);
+
 
     @Query("""
         SELECT p1.conversation.id

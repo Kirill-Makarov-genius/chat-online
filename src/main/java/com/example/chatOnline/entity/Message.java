@@ -2,22 +2,11 @@ package com.example.chatOnline.entity;
 
 import java.time.LocalDateTime;
 
+import jakarta.persistence.*;
 import org.hibernate.annotations.CreationTimestamp;
 
 import com.example.chatOnline.enums.MessageStatus;
 
-import jakarta.annotation.Generated;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -25,7 +14,12 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
-@Table(name="messages")
+@Table(name="messages", indexes = {
+        // Fast lookup by conversation id
+        @Index(name = "idx_msg_conversation", columnList = "conversation_id"),
+        // Fast sorting by date
+        @Index(name = "idx_msg_sent_at", columnList = "sentAt")
+})
 @Getter
 @Setter
 @NoArgsConstructor

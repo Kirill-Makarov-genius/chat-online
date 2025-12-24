@@ -8,19 +8,17 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import com.example.chatOnline.dto.UserDto;
+import com.example.chatOnline.dto.*;
 import com.example.chatOnline.exception.ConversationNotFoundException;
 import com.example.chatOnline.exception.UserNotFoundException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.example.chatOnline.dto.ConversationDto;
-import com.example.chatOnline.dto.MessageRequestDto;
-import com.example.chatOnline.dto.MessageResponseDto;
 import com.example.chatOnline.entity.ChatParticipant;
 import com.example.chatOnline.entity.Conversation;
 import com.example.chatOnline.entity.Message;
@@ -47,11 +45,14 @@ public class ConversationService {
     private final UserRepository userRepository;
     private final MessageMapper messageMapper;
     private final ConversationMapper conversationMapper;
+    private final KafkaTemplate<String, NotificationEventDto> kafkaTemplate;
 
+    private static final String NOTIFICATION_TOPIC = "chat-notifications";
 
 
     @Transactional
     public MessageResponseDto saveMessage(Long conversationId, MessageRequestDto request, String username){
+        LocalDateTime now = LocalDateTime.now();
         User sender = userRepository.findByUsername(username)
             .orElseThrow(() -> new RuntimeException("User not found"));
 
@@ -68,20 +69,40 @@ public class ConversationService {
         message.setConversation(conversation);
         message.setSender(sender);
         message.setStatus(MessageStatus.SENT);
-        message.setSentAt(LocalDateTime.now());
-        if (message.getContent().length() > 90) {
-            conversation.setLastMessage(message.getContent().substring(0, 87)+"...");
-        }
-        else{
-            conversation.setLastMessage(message.getContent());
-        }
-        conversation.setLastMessageAt(LocalDateTime.now());
+        message.setSentAt(now);
+
+        String content = request.getContent();
+        String preview = (content.length() > 50) ? content.substring(0, 47) + "..." : content;
+
+        conversation.setLastMessage(preview);
+        conversation.setLastMessageAt(now);
         
         conversationRepository.save(conversation);
         Message savedMessage = messageRepository.save(message);
 
+        sendNotifications(conversationId, savedMessage, sender);
+
         return messageMapper.toDto(savedMessage);
     }
+
+    //Send a notification about message
+    public void sendNotifications(Long conversationId, Message message, User sender){
+
+        List<User> participants = chatParticipantRepository.findUsersByConversationId(conversationId);
+
+        for(User participant: participants){
+            if (!participant.getUsername().equals(sender.getUsername())){
+                NotificationEventDto notificationEvent = NotificationEventDto.builder()
+                        .recipientUsername(participant.getUsername())
+                        .senderUsername(sender.getUsername())
+                        .content(message.getContent())
+                        .conversationId(conversationId)
+                        .build();
+                kafkaTemplate.send(NOTIFICATION_TOPIC, participant.getUsername(), notificationEvent);
+            }
+        }
+    }
+
 
     public List<ConversationDto> getAllUserConversation(String username){
         User currentUser = userRepository.findByUsername(username)
