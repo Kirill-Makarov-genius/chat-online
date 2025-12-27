@@ -1,4 +1,19 @@
 spring:
+  security:
+    oauth2:
+        client:
+          registration:
+            google:
+              client-id: ${GOOGLE_CLIENT_ID}
+              client-secret: ${GOOGLE_CLIENT_SECRET}
+              scope:
+                - profile
+                - email
+                - https://www.googleapis.com/auth/drive.readonly
+          provider:
+            google:
+              issuer-uri: https://accounts.google.com
+
   config:
     import: optional:file:.env[.properties]
   datasource:

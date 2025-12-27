@@ -73,13 +73,17 @@
                         </div>
 
                         <hr>
-
                         <!-- Buttons -->
                         <div class="d-flex justify-content-between">
                             <a href="/chats" class="btn btn-secondary">Back</a>
                             <button type="submit" class="btn btn-primary">Save Changes</button>
                         </div>
-
+                        <!-- Show this ONLY to the room creator -->
+                        <div>
+                            <a th:href="@{/oauth2/authorization/google}" class="btn btn-danger">
+                                Connect Google Drive to Pick Video
+                            </a>
+                        </div>
                     </form>
                 </div>
             </div>

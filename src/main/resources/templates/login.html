@@ -41,6 +41,13 @@
         <button type="submit" class="btn" style="background-color: #42b72a;">Create Account</button>
         <div th:if="${param.registered}" style="color:green; margin-top:10px;">Success! Please log in.</div>
     </form>
+
+
+    <p>Or connect your services:</p>
+    <!-- This URL is generated automatically by Spring Security -->
+    <a th:href="@{/oauth2/authorization/google}" style="background: #db4437; color: white; padding: 10px; text-decoration: none;">
+        Sign in with Google (to use Google Drive)
+    </a>
 </div>
 
 </body>

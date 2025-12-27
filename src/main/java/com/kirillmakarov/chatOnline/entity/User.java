@@ -43,6 +43,8 @@ public class User implements UserDetails{
 
     private String password;
 
+    private String googleId;
+
     private String status;
 
     private String description;
