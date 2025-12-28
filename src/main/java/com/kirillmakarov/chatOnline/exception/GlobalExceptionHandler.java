@@ -16,6 +16,12 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
         model.addAttribute("status", 404);
         return "error/404";
     }
+    @ExceptionHandler(RoomNotFoundException.class)
+    public String handlerRoomNotFoundException(RoomNotFoundException ex, Model model){
+        model.addAttribute("message", ex.getMessage());
+        model.addAttribute("status", 404);
+        return "error/404";
+    }
 
     @ExceptionHandler(ConversationNotFoundException.class)
      public String handlerConversationNotFoundException(ConversationNotFoundException ex, Model model){
@@ -31,6 +37,12 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
         return "redirect:/profile";
 
+    }
+    @ExceptionHandler(NotUniqueIdRoom.class)
+    public String handlesNotUniqueIdRoom(NotUniqueIdRoom ex, Model model){
+        model.addAttribute("message", ex.getMessage());
+        model.addAttribute("status", 409);
+        return "error/error";
     }
 
  }

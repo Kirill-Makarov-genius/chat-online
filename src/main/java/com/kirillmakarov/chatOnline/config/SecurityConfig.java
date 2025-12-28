@@ -19,10 +19,12 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http,
                                            CustomOAuth2UserService customOAuth2UserService) throws Exception {
         http
+                .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/login", "/register", "/").permitAll()
                         .requestMatchers("/css/**", "/js/**", "/images**").permitAll()
                         .requestMatchers("/support").permitAll()
+                        .requestMatchers("/api/video/**").authenticated()
                         .anyRequest().authenticated()
                 )
 
@@ -38,7 +40,7 @@ public class SecurityConfig {
                         .loginPage("/login")
                         .userInfoEndpoint(userInfo -> userInfo
                                 .userService(customOAuth2UserService))
-                        .defaultSuccessUrl("/google-link-success", true)
+                        .defaultSuccessUrl("/watch/select-video", true)
                 )
                 .logout(logout -> logout
                         .logoutUrl("/logout")

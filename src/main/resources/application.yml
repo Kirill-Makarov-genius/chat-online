@@ -1,19 +1,23 @@
 spring:
+
   security:
     oauth2:
         client:
           registration:
             google:
+              scope:
+                - email
+                - profile
+                - https://www.googleapis.com/auth/drive.readonly # Обязательно!
               client-id: ${GOOGLE_CLIENT_ID}
               client-secret: ${GOOGLE_CLIENT_SECRET}
-              scope:
-                - profile
-                - email
-                - https://www.googleapis.com/auth/drive.readonly
+              client-api-key: ${GOOGLE_API_KEY}
           provider:
             google:
               issuer-uri: https://accounts.google.com
-
+  threads:
+    virtual:
+      enabled: true
   config:
     import: optional:file:.env[.properties]
   datasource:
@@ -23,7 +27,7 @@ spring:
   jpa:
       show-sql: true
       hibernate:
-          ddl-auto: update
+          ddl-auto: create-drop
   servlet:
     multipart:
       max-file-size: -1
@@ -56,3 +60,6 @@ spring:
 
 file:
     upload-dir: uploads
+server:
+  compression:
+    enabled: false

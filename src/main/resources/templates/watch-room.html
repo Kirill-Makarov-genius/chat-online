@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="${room.name} + ' - Watch Together'">Watch Room</title>
+    <!-- Bootstrap for styling -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- SockJS and STOMP for WebSockets -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.6.1/sockjs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+
+    <style>
+        body { background-color: #121212; color: #e0e0e0; }
+        .video-container { background: #000; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.5); }
+        .room-sidebar { background: #1e1e1e; border-radius: 8px; padding: 20px; height: 100%; }
+        .badge-live { background-color: #ff4b2b; animation: pulse 2s infinite; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+    </style>
+</head>
+<body>
+
+<div class="container-fluid py-4">
+    <div class="row">
+        <!-- Left Side: Video Player -->
+        <div class="col-lg-9 col-md-8 mb-4">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h2 class="mb-0">
+                    <span class="badge badge-live me-2" style="font-size: 0.5em; vertical-align: middle;">LIVE</span>
+                    <span th:text="${room.name}">Room Name</span>
+                </h2>
+                <div class="text-muted small">
+                    Room ID: <strong class="text-primary" th:text="${room.id}">ID</strong>
+                </div>
+            </div>
+
+            <div class="video-container">
+                <!-- video source points to your Optimized Controller -->
+                <video id="mainPlayer" style="width: 600px; height: 400px; border: 5px solid red;" controls preload="auto">
+                    <source th:src="@{/api/video/{id}(id=${room.fileId})}" type="video/mp4">
+                </video>
+            </div>
+
+            <div class="mt-3 p-3 bg-dark rounded">
+                <h5 class="text-info" th:text="${room.fileName}">Filename.mp4</h5>
+                <p class="text-muted mb-0 small">Created by: <span th:text="${room.creatorName}">User</span></p>
+            </div>
+        </div>
+
+        <!-- Right Side: Room Info / Participants (Placeholder for Chat) -->
+        <div class="col-lg-3 col-md-4">
+            <div class="room-sidebar shadow">
+                <h4>Room Details</h4>
+                <hr class="border-secondary">
+                <p>Invite friends by sharing this Room ID:</p>
+                <div class="input-group mb-3">
+                    <input type="text" class="form-control bg-dark text-white border-secondary"
+                           th:value="${room.id}" id="roomIdInput" readonly>
+                    <button class="btn btn-outline-primary" onclick="copyRoomId()">Copy</button>
+                </div>
+
+                <div class="mt-4">
+                    <h6>Participants</h6>
+                    <ul class="list-unstyled small" id="userList">
+                        <li><i class="text-success">●</i> <span th:text="${room.creatorName} + ' (Host)'"></span></li>
+                    </ul>
+                </div>
+
+                <div class="alert alert-info mt-auto small">
+                    <i class="bi bi-info-circle"></i>
+                    Playback is synced for everyone. When you seek or pause, everyone else does too!
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script th:inline="javascript">
+    /* --- Data from Spring Model --- */
+    const roomId = [[${room.id}]];
+    const fileId = [[${room.fileId}]];
+    const currentUser = [[${#authentication.name}]];
+    const initialState = {
+        time: [[${room.currentTime}]],
+        isPlaying: [[${room.isPlaying}]]
+    };
+
+    /* --- DOM Elements --- */
+    const video = document.getElementById('mainPlayer');
+    let isRemoteAction = false; // Flag to prevent feedback loops
+
+    /* --- WebSocket Connection --- */
+    const socket = new SockJS('/ws'); // Ensure this matches your StompEndpointRegistry
+    const stompClient = Stomp.over(socket);
+    stompClient.debug = null; // Set to console.log for debugging
+
+    stompClient.connect({}, () => {
+        console.log("Connected to room: " + roomId);
+
+        // Subscribe to this specific room's video control topic
+        stompClient.subscribe('/topic/video/' + roomId, (message) => {
+            const signal = JSON.parse(message.body);
+
+            // If the message is from us, ignore it
+            if (signal.sender === currentUser) return;
+
+            console.log("Remote signal received:", signal);
+            handleRemoteSignal(signal);
+        });
+    });
+
+    /* --- Player Logic --- */
+
+    // On Load: Jump to the time saved in the Database
+    video.addEventListener('loadedmetadata', () => {
+        video.currentTime = initialState.time;
+        if (initialState.isPlaying) {
+            video.play().catch(() => console.log("Autoplay blocked. User interaction required."));
+        }
+    });
+
+    // Listen for Play
+    video.onplay = () => {
+        if (!isRemoteAction) {
+            sendSignal("PLAY", video.currentTime);
+        }
+    };
+
+    // Listen for Pause
+    video.onpause = () => {
+        if (!isRemoteAction) {
+            sendSignal("PAUSE", video.currentTime);
+        }
+    };
+
+    // Listen for Seek (when user jumps on timeline)
+    video.onseeked = () => {
+        if (!isRemoteAction) {
+            sendSignal("SEEK", video.currentTime);
+        }
+    };
+
+    /* --- Signaling Functions --- */
+
+    function sendSignal(action, time) {
+        const payload = {
+            action: action,
+            currentTime: time,
+            fileId: fileId,
+            sender: currentUser
+        };
+        stompClient.send("/app/video.sync/" + roomId, {}, JSON.stringify(payload));
+    }
+
+    function handleRemoteSignal(signal) {
+        isRemoteAction = true; // Set flag to true so our listeners don't fire back
+
+        if (signal.action === "PLAY") {
+            video.currentTime = signal.currentTime;
+            video.play();
+        } else if (signal.action === "PAUSE") {
+            video.pause();
+        } else if (signal.action === "SEEK") {
+            video.currentTime = signal.currentTime;
+        }
+
+        // Reset the flag after a short delay so local actions can be tracked again
+        setTimeout(() => { isRemoteAction = false; }, 400);
+    }
+
+    function copyRoomId() {
+        const input = document.getElementById('roomIdInput');
+        input.select();
+        document.execCommand('copy');
+        alert("Room ID copied to clipboard!");
+    }
+</script>
+
+</body>
+</html>
