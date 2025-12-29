@@ -66,4 +66,4 @@ server:
     enabled: false
 app:
   storage:
-    video-temp: E:/movies/movies-together
+    video-temp: ${VIDEO_STORAGE_PATH:E:/movies/movies-together}

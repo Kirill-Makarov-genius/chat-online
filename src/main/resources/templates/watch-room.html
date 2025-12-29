@@ -179,6 +179,22 @@
             }
         });
     });
+    const roomStatus = [[${room.status.name()}]];
+
+    if (roomStatus === 'PROCESSING') {
+        const checkStatusInterval = setInterval(() => {
+            // Делаем легкий запрос к API, чтобы узнать статус
+            fetch(`/api/rooms/${roomId}/status`)
+                .then(response => response.json())
+                .then(status => {
+                    if (status === 'READY') {
+                        clearInterval(checkStatusInterval);
+                        location.reload(); // Перезагружаем, когда готово
+                    }
+                })
+                .catch(err => console.error("Error checking status:", err));
+        }, 5000); // Проверка каждые 5 секунд
+    }
 
     /* --- 4. Synchronization Logic --- */
 
@@ -192,19 +208,30 @@
         });
     });
 
-    // Local Event Listeners (Send signals to others)
-    player.on('play', () => {
-        if (!isRemoteAction) sendSignal("PLAY", player.currentTime());
-    });
+
 
     player.on('pause', () => {
         if (!isRemoteAction) sendSignal("PAUSE", player.currentTime());
     });
+    let lastBroadcastTime = 0; // Переменная для хранения последнего отправленного времени
 
     player.on('seeked', () => {
-        if (!isRemoteAction) sendSignal("SEEK", player.currentTime());
+        if (!isRemoteAction) {
+            const currentTime = player.currentTime();
+            if (Math.abs(currentTime - lastBroadcastTime) > 2) {
+                sendSignal("SEEK", currentTime);
+                lastBroadcastTime = currentTime;
+            }
+        }
     });
 
+
+    player.on('play', () => {
+        if (!isRemoteAction) {
+            lastBroadcastTime = player.currentTime();
+            sendSignal("PLAY", lastBroadcastTime);
+        }
+    });
     function sendSignal(action, time) {
         const payload = {
             action: action,

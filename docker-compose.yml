@@ -50,6 +50,7 @@ services:
   app:
     build: .
     container_name: chat_app
+    env_file: .env
     depends_on:
       db:
         condition: service_healthy
@@ -61,7 +62,7 @@ services:
       - ./uploads/:/app/uploads
     environment:
       SERVER_PORT: 8080
-
+      VIDEO_STORAGE_PATH: /app/uploads
       DB_URL: jdbc:postgresql://db:5432/chat-online-db
       DB_USER: postgres
       DB_PASSWORD: password

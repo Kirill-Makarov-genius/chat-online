@@ -22,13 +22,14 @@ public class LocalVideoController {
 
     private final RoomRepository roomRepository;
 
+    private final RoomService roomService;
+
     @GetMapping("/{roomId}")
     public ResponseEntity<ResourceRegion> streamLocal(
             @PathVariable String roomId,
             @RequestHeader HttpHeaders headers) throws IOException {
 
-        Room room = roomRepository.findById(roomId)
-                .orElseThrow(() -> new RuntimeException("Room not found"));
+        RoomDto room = roomService.findRoomByIdForCached(roomId);
 
         File file = new File(room.getLocalPath());
         if (!file.exists()) {

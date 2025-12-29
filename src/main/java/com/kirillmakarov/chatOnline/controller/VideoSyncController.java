@@ -29,7 +29,6 @@ public class VideoSyncController {
         roomRepository.findById(roomId).ifPresent(room -> {
             room.setPlaying(VideoMessageAction.PLAY.equals(msg.getAction()));
             room.setCurrentTime(msg.getCurrentTime());
-            roomRepository.save(room);
         });
         System.out.println("Syncing Room " + roomId + ": " + msg.getAction() + " at " + msg.getCurrentTime());
         return msg;

@@ -10,6 +10,7 @@ import com.kirillmakarov.chatOnline.mapper.RoomMapper;
 import com.kirillmakarov.chatOnline.repository.RoomRepository;
 import com.kirillmakarov.chatOnline.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 
@@ -41,7 +42,15 @@ public class RoomService {
 
     }
 
+
     public RoomDto findRoomById(String roomId){
+        Room room = roomRepository.findById(roomId)
+                .orElseThrow(() -> new RoomNotFoundException("Room with id - " + roomId + " not found"));
+
+        return roomMapper.toDto(room);
+    }
+    @Cacheable(value = "roomCache", key="#roomId")
+    public RoomDto findRoomByIdForCached(String roomId){
         Room room = roomRepository.findById(roomId)
                 .orElseThrow(() -> new RoomNotFoundException("Room with id - " + roomId + " not found"));
 
