@@ -46,6 +46,7 @@ public class CustomUserDetailsService implements UserDetailsService {
                 .username(registrationFormDto.getUsername())
                 .nickname(registrationFormDto.getNickname())
                 .password(passwordEncoder.encode(registrationFormDto.getPassword()))
+                .profilePicture("default-avatar.webp")
                 .build();
         userRepository.save(newUser);
     }

@@ -2,80 +2,142 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title th:text="${room.name} + ' - Watch Together'">Watch Room</title>
-    <!-- Bootstrap for styling -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${room.name} + ' | Chat Online'">Watch Room</title>
+
+    <!-- Modern UI Dependencies -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- SockJS and STOMP for WebSockets -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+    <!-- Video.js & Mux.js (The MKV Engine) -->
+    <link href="https://vjs.zencdn.net/8.10.0/video-js.css" rel="stylesheet" />
+    <script src="https://vjs.zencdn.net/8.10.0/video.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mux.js/6.3.0/mux.min.js"></script>
+
+    <!-- WebSocket Libraries -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.6.1/sockjs.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
 
     <style>
-        body { background-color: #121212; color: #e0e0e0; }
-        .video-container { background: #000; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.5); }
-        .room-sidebar { background: #1e1e1e; border-radius: 8px; padding: 20px; height: 100%; }
-        .badge-live { background-color: #ff4b2b; animation: pulse 2s infinite; }
-        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+        :root {
+            --bg-body: #080c14;
+            --glass-bg: rgba(255, 255, 255, 0.03);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --accent: #38bdf8;
+            --accent-glow: rgba(56, 189, 248, 0.4);
+        }
+
+        body {
+            background: radial-gradient(circle at top right, #1e293b, var(--bg-body));
+            background-attachment: fixed;
+            color: #f1f5f9;
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .glass-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        .badge-live {
+            background: #ef4444;
+            font-weight: 700;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+        }
+
+        .video-wrapper {
+            background: #000;
+            border-radius: 16px;
+            overflow: hidden;
+            border: 1px solid var(--glass-border);
+        }
+
+        /* Video.js custom sizing */
+        .video-js {
+            width: 100% !important;
+            height: auto;
+            aspect-ratio: 16 / 9;
+        }
+
+        .sidebar-title { font-size: 0.9rem; text-transform: uppercase; color: var(--accent); font-weight: 700; }
+        .status-dot { height: 8px; width: 8px; background: #10b981; border-radius: 50%; display: inline-block; margin-right: 8px; }
+        .btn-accent { background: var(--accent); color: #000; font-weight: 600; border-radius: 12px; }
+        .copy-box { background: rgba(0,0,0,0.3); border: 1px dashed var(--glass-border); border-radius: 12px; padding: 8px 15px; cursor: pointer; }
     </style>
 </head>
 <body>
 
-<div class="container-fluid py-4">
-    <div class="row">
-        <!-- Left Side: Video Player -->
-        <div class="col-lg-9 col-md-8 mb-4">
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <h2 class="mb-0">
-                    <span class="badge badge-live me-2" style="font-size: 0.5em; vertical-align: middle;">LIVE</span>
-                    <span th:text="${room.name}">Room Name</span>
-                </h2>
-                <div class="text-muted small">
-                    Room ID: <strong class="text-primary" th:text="${room.id}">ID</strong>
-                </div>
+<div class="container-fluid px-4 py-4">
+    <!-- Header -->
+    <div class="glass-card p-3 mb-4 d-flex align-items-center justify-content-between">
+        <div class="d-flex align-items-center">
+            <a href="/watch/select-video" class="btn btn-link text-white me-3"><i class="bi bi-chevron-left"></i></a>
+            <div>
+                <h4 class="mb-0 fw-bold" th:text="${room.name}">Room Name</h4>
+                <p class="text-muted mb-0 small"><i class="bi bi-file-earmark-play me-1"></i> <span th:text="${room.fileName}">video.mp4</span></p>
             </div>
+        </div>
+        <div class="d-flex align-items-center gap-3">
+            <span class="badge badge-live px-3 py-2 rounded-pill">LIVE</span>
+            <div class="copy-box" onclick="copyRoomId()" id="roomLinkBox">
+                <span class="small me-2">ID:</span>
+                <span class="fw-bold text-info" th:text="${room.id}" id="roomIdText">ID</span>
+                <i class="bi bi-copy ms-2"></i>
+            </div>
+        </div>
+    </div>
 
-            <div class="video-container">
-                <!-- video source points to your Optimized Controller -->
-                <video id="mainPlayer" style="width: 600px; height: 400px; border: 5px solid red;" controls preload="auto">
+    <div class="row">
+        <!-- Player -->
+        <div class="col-xl-9 col-lg-8 mb-4">
+            <div class="video-wrapper shadow-lg">
+                <!-- Video.js Player -->
+                <video id="mainPlayer" class="video-js vjs-default-skin vjs-big-play-centered" controls preload="auto">
                     <source th:src="@{/api/video/{id}(id=${room.fileId})}" type="video/mp4">
                 </video>
             </div>
 
-            <div class="mt-3 p-3 bg-dark rounded">
-                <h5 class="text-info" th:text="${room.fileName}">Filename.mp4</h5>
-                <p class="text-muted mb-0 small">Created by: <span th:text="${room.creatorName}">User</span></p>
+            <div class="mt-4 p-4 glass-card d-flex justify-content-between align-items-center">
+                <div>
+                    <h5 class="mb-1 fw-bold">Synchronized Playback</h5>
+                    <p class="mb-0 text-muted small">Actions are synced via WebSockets.</p>
+                </div>
+                <div class="text-end">
+                    <p class="mb-0 small text-muted">Host</p>
+                    <p class="mb-0 fw-bold text-info" th:text="${room.creatorName}">Host Name</p>
+                </div>
             </div>
         </div>
 
-        <!-- Right Side: Room Info / Participants (Placeholder for Chat) -->
-        <div class="col-lg-3 col-md-4">
-            <div class="room-sidebar shadow">
-                <h4>Room Details</h4>
+        <!-- Sidebar -->
+        <div class="col-xl-3 col-lg-4">
+            <div class="glass-card p-4 h-100">
+                <h6 class="sidebar-title mb-4">Participants</h6>
+                <div class="participant-item d-flex align-items-center mb-3">
+                    <div class="status-dot"></div>
+                    <span class="fw-bold" th:text="${room.creatorName}">Host</span>
+                </div>
                 <hr class="border-secondary">
-                <p>Invite friends by sharing this Room ID:</p>
-                <div class="input-group mb-3">
-                    <input type="text" class="form-control bg-dark text-white border-secondary"
-                           th:value="${room.id}" id="roomIdInput" readonly>
-                    <button class="btn btn-outline-primary" onclick="copyRoomId()">Copy</button>
-                </div>
-
-                <div class="mt-4">
-                    <h6>Participants</h6>
-                    <ul class="list-unstyled small" id="userList">
-                        <li><i class="text-success">●</i> <span th:text="${room.creatorName} + ' (Host)'"></span></li>
-                    </ul>
-                </div>
-
-                <div class="alert alert-info mt-auto small">
-                    <i class="bi bi-info-circle"></i>
-                    Playback is synced for everyone. When you seek or pause, everyone else does too!
-                </div>
+                <h6 class="sidebar-title mb-3">Invite</h6>
+                <button class="btn btn-accent w-100 py-3" onclick="copyRoomId()">Invite Friends <i class="bi bi-people-fill ms-2"></i></button>
             </div>
         </div>
     </div>
 </div>
 
 <script th:inline="javascript">
-    /* --- Data from Spring Model --- */
+    /* --- 1. Variables --- */
     const roomId = [[${room.id}]];
     const fileId = [[${room.fileId}]];
     const currentUser = [[${#authentication.name}]];
@@ -83,63 +145,56 @@
         time: [[${room.currentTime}]],
         isPlaying: [[${room.isPlaying}]]
     };
+    let isRemoteAction = false;
 
-    /* --- DOM Elements --- */
-    const video = document.getElementById('mainPlayer');
-    let isRemoteAction = false; // Flag to prevent feedback loops
+    /* --- 2. Initialize Video.js with Mux.js support --- */
+    const player = videojs('mainPlayer', {
+        html5: {
+            vhs: { overrideNative: true }, // Crucial for MKV/TS demuxing
+            nativeAudioTracks: false,
+            nativeVideoTracks: false
+        }
+    });
 
-    /* --- WebSocket Connection --- */
-    const socket = new SockJS('/ws'); // Ensure this matches your StompEndpointRegistry
+    /* --- 3. WebSocket Connection --- */
+    const socket = new SockJS('/ws');
     const stompClient = Stomp.over(socket);
-    stompClient.debug = null; // Set to console.log for debugging
+    stompClient.debug = null;
 
     stompClient.connect({}, () => {
-        console.log("Connected to room: " + roomId);
-
-        // Subscribe to this specific room's video control topic
+        console.log("WebSocket Connected to room: " + roomId);
         stompClient.subscribe('/topic/video/' + roomId, (message) => {
             const signal = JSON.parse(message.body);
-
-            // If the message is from us, ignore it
-            if (signal.sender === currentUser) return;
-
-            console.log("Remote signal received:", signal);
-            handleRemoteSignal(signal);
+            if (signal.sender !== currentUser) {
+                handleRemoteSignal(signal);
+            }
         });
     });
 
-    /* --- Player Logic --- */
+    /* --- 4. Synchronization Logic --- */
 
-    // On Load: Jump to the time saved in the Database
-    video.addEventListener('loadedmetadata', () => {
-        video.currentTime = initialState.time;
-        if (initialState.isPlaying) {
-            video.play().catch(() => console.log("Autoplay blocked. User interaction required."));
-        }
+    // Seek to initial time once video metadata is ready
+    player.ready(() => {
+        player.one('loadedmetadata', () => {
+            player.currentTime(initialState.time);
+            if (initialState.isPlaying) {
+                player.play().catch(() => console.log("Autoplay blocked by browser."));
+            }
+        });
     });
 
-    // Listen for Play
-    video.onplay = () => {
-        if (!isRemoteAction) {
-            sendSignal("PLAY", video.currentTime);
-        }
-    };
+    // Local Event Listeners (Send signals to others)
+    player.on('play', () => {
+        if (!isRemoteAction) sendSignal("PLAY", player.currentTime());
+    });
 
-    // Listen for Pause
-    video.onpause = () => {
-        if (!isRemoteAction) {
-            sendSignal("PAUSE", video.currentTime);
-        }
-    };
+    player.on('pause', () => {
+        if (!isRemoteAction) sendSignal("PAUSE", player.currentTime());
+    });
 
-    // Listen for Seek (when user jumps on timeline)
-    video.onseeked = () => {
-        if (!isRemoteAction) {
-            sendSignal("SEEK", video.currentTime);
-        }
-    };
-
-    /* --- Signaling Functions --- */
+    player.on('seeked', () => {
+        if (!isRemoteAction) sendSignal("SEEK", player.currentTime());
+    });
 
     function sendSignal(action, time) {
         const payload = {
@@ -152,28 +207,30 @@
     }
 
     function handleRemoteSignal(signal) {
-        isRemoteAction = true; // Set flag to true so our listeners don't fire back
+        isRemoteAction = true; // Block local listeners from triggering
 
         if (signal.action === "PLAY") {
-            video.currentTime = signal.currentTime;
-            video.play();
+            player.currentTime(signal.currentTime);
+            player.play();
         } else if (signal.action === "PAUSE") {
-            video.pause();
+            player.pause();
         } else if (signal.action === "SEEK") {
-            video.currentTime = signal.currentTime;
+            player.currentTime(signal.currentTime);
         }
 
-        // Reset the flag after a short delay so local actions can be tracked again
-        setTimeout(() => { isRemoteAction = false; }, 400);
+        // Delay resetting the flag to allow Video.js to finish state changes
+        setTimeout(() => { isRemoteAction = false; }, 600);
     }
 
+    /* --- 5. Utilities --- */
     function copyRoomId() {
-        const input = document.getElementById('roomIdInput');
-        input.select();
-        document.execCommand('copy');
-        alert("Room ID copied to clipboard!");
+        const idText = document.getElementById('roomIdText').innerText;
+        navigator.clipboard.writeText(idText);
+        const box = document.getElementById('roomLinkBox');
+        const originalHtml = box.innerHTML;
+        box.innerHTML = '<span class="text-success small fw-bold">Copied! <i class="bi bi-check-lg"></i></span>';
+        setTimeout(() => { box.innerHTML = originalHtml; }, 2000);
     }
 </script>
-
 </body>
 </html>

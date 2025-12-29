@@ -68,24 +68,3 @@ public class VideoStreamController {
                 .body(new InputStreamResource(videoStream));
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

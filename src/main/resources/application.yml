@@ -1,5 +1,4 @@
 spring:
-
   security:
     oauth2:
         client:
@@ -8,7 +7,7 @@ spring:
               scope:
                 - email
                 - profile
-                - https://www.googleapis.com/auth/drive.readonly # Обязательно!
+                - https://www.googleapis.com/auth/drive.readonly 
               client-id: ${GOOGLE_CLIENT_ID}
               client-secret: ${GOOGLE_CLIENT_SECRET}
               client-api-key: ${GOOGLE_API_KEY}
@@ -27,7 +26,7 @@ spring:
   jpa:
       show-sql: true
       hibernate:
-          ddl-auto: create-drop
+          ddl-auto: update
   servlet:
     multipart:
       max-file-size: -1

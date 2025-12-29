@@ -1,98 +1,290 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
-    <title>Profile Settings</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings | Chat Online</title>
+
+    <!-- Modern UI Dependencies -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Bootstrap Icons -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --bg-body: #080c14;
+            --glass-bg: rgba(255, 255, 255, 0.03);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --accent: #38bdf8;
+            --accent-glow: rgba(56, 189, 248, 0.2);
+        }
+
+        body {
+            background: radial-gradient(circle at bottom left, #1e293b, var(--bg-body));
+            background-attachment: fixed;
+            color: #f1f5f9;
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
+        }
+
+        .glass-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(16px);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+        }
+
+        /* Profile Image Section */
+        .profile-upload {
+            position: relative;
+            width: 120px;
+            height: 120px;
+            margin: 0 auto;
+        }
+        .profile-img {
+            width: 120px;
+            height: 120px;
+            object-fit: cover;
+            border-radius: 30px;
+            border: 3px solid var(--accent);
+            box-shadow: 0 0 20px var(--accent-glow);
+        }
+        .upload-btn {
+            position: absolute;
+            bottom: -5px;
+            right: -5px;
+            background: var(--accent);
+            color: #000;
+            border-radius: 50%;
+            width: 35px;
+            height: 35px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        .upload-btn:hover { transform: scale(1.1); background: #fff; }
+
+        /* Form Styling */
+        .form-label {
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--accent);
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+        .form-control {
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid var(--glass-border);
+            color: #fff;
+            border-radius: 12px;
+            padding: 12px 15px;
+            transition: all 0.3s;
+        }
+        .form-control:focus {
+            background: rgba(0, 0, 0, 0.4);
+            border-color: var(--accent);
+            box-shadow: 0 0 10px var(--accent-glow);
+            color: #fff;
+        }
+        .form-control:disabled {
+            background: transparent;
+            border-style: dashed;
+            opacity: 0.6;
+        }
+
+        .nav-link-custom {
+            color: #94a3b8;
+            transition: 0.3s;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            border-radius: 10px;
+        }
+        .nav-link-custom:hover, .nav-link-custom.active {
+            color: var(--accent);
+            background: rgba(56, 189, 248, 0.1);
+        }
+
+        .btn-save {
+            background: var(--accent);
+            color: #000;
+            font-weight: 700;
+            border-radius: 12px;
+            padding: 12px 30px;
+            border: none;
+            transition: 0.3s;
+        }
+        .btn-save:hover {
+            background: #fff;
+            box-shadow: 0 0 20px var(--accent-glow);
+        }
+        /* Additional style for the description textarea */
+        textarea.form-control {
+            resize: none;
+            overflow-y: auto;
+        }
+
+        .input-group-text {
+            border-radius: 12px 0 0 12px !important;
+        }
+
+        .input-group .form-control {
+            border-radius: 0 12px 12px 0 !important;
+        }
+    </style>
 </head>
-<body class="bg-light">
+<body>
 
-<div class="container mt-5">
+<div class="container py-5">
     <div class="row justify-content-center">
-        <div class="col-md-6">
-            <div class="card shadow">
-                <div class="card-header bg-primary text-white">
-                    <h4 class="mb-0">User Settings</h4>
-                </div>
-                <div class="card-body">
-                    <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible fade show" role="alert">
-                        <i class="bi bi-exclamation-triangle-fill me-2"></i>
-                        <span th:text="${errorMessage}">Error Message</span>
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        <!-- Left Sidebar Navigation -->
+        <div class="col-lg-3 mb-4">
+            <div class="glass-card p-4">
+                <div class="text-center mb-4">
+                    <div class="profile-upload mb-3">
+                        <!-- Logic: Show profile picture if exists, else default -->
+                        <img th:src="${userDto.getProfilePictureUrl()}"
+                             class="profile-img" alt="Profile">
+                        <label for="file-input" class="upload-btn">
+                            <i class="bi bi-camera-fill"></i>
+                        </label>
                     </div>
-                    <form th:action="@{/profile/update}" method="post" enctype="multipart/form-data" th:object="${userDto}">
-
-                        <!-- Current Profile Picture Preview -->
-                        <div class="text-center mb-4">
-                            <img th:src="${userDto.getProfilePictureUrl()}"
-                                 class="rounded-circle border"
-                                 style="width: 120px; height: 120px; object-fit: cover;"
-                                 alt="Profile Picture">
-                        </div>
-
-                        <!-- 1. Nickname Input -->
-                        <div class="mb-3">
-                            <label for="nickname" class="form-label">Nickname</label>
-                            <div class="input-group">
-                                <span class="input-group-text"><i class="bi bi-person"></i></span>
-                                <input type="text" class="form-control" id="nickname" th:field="*{nickname}">
-                            </div>
-                            <!-- Fixed: Match error check to field name -->
-                            <div class="text-danger" th:if="${#fields.hasErrors('nickname')}" th:errors="*{nickname}"></div>
-                        </div>
-
-                        <!-- 2. NEW: Status Input -->
-                        <div class="mb-3">
-                            <label for="status" class="form-label">Status Message</label>
-                            <div class="input-group">
-                                <span class="input-group-text"><i class="bi bi-emoji-smile"></i></span>
-                                <input type="text" class="form-control" id="status" th:field="*{status}"
-                                       placeholder="e.g. Working remotely, At the gym...">
-                            </div>
-                            <div class="text-danger" th:if="${#fields.hasErrors('status')}" th:errors="*{status}"></div>
-
-                        </div>
-
-                        <!-- 3. NEW: Description / Bio -->
-                        <div class="mb-3">
-                            <label for="description" class="form-label">About Me</label>
-                            <div class="input-group">
-                                <span class="input-group-text"><i class="bi bi-file-text"></i></span>
-                                <textarea class="form-control" id="description" th:field="*{description}"
-                                          rows="3" placeholder="Tell us a little about yourself..."></textarea>
-                            </div>
-                            <div class="text-danger" th:if="${#fields.hasErrors('description')}" th:errors="*{description}"></div>
-
-                        </div>
-
-                        <!-- 4. Image Upload Input -->
-                        <div class="mb-3">
-                            <label for="profileImage" class="form-label">Change Profile Picture</label>
-                            <input class="form-control" type="file" id="profileImage" name="profileImage" accept="image/*">
-                        </div>
-
-                        <hr>
-                        <!-- Buttons -->
-                        <div class="d-flex justify-content-between">
-                            <a href="/chats" class="btn btn-secondary">Back</a>
-                            <button type="submit" class="btn btn-primary">Save Changes</button>
-                        </div>
-                        <!-- Show this ONLY to the room creator -->
-                        <div>
-                            <a th:href="@{/oauth2/authorization/google}" class="btn btn-danger">
-                                Connect Google Drive to Pick Video
-                            </a>
-                        </div>
-                    </form>
+                    <h5 class="fw-bold mb-0" th:text="${userDto.nickname}">Nickname</h5>
+                    <p class="small text-muted" th:text="'@' + ${userDto.username}">@username</p>
                 </div>
+
+                <nav class="nav flex-column">
+                    <a class="nav-link-custom active" href="#"><i class="bi bi-person me-3"></i> General</a>
+                    <a class="nav-link-custom" href="/chats"><i class="bi bi-chat-dots me-3"></i> Back to Chats</a>
+                    <hr class="border-secondary">
+                    <a class="nav-link-custom text-danger" href="/logout"><i class="bi bi-box-arrow-left me-3"></i> Logout</a>
+                </nav>
+            </div>
+        </div>
+
+        <!-- Right Main Settings Form -->
+        <div class="col-lg-7">
+            <!-- Success Message -->
+            <div th:if="${success}" class="alert alert-success bg-success text-white border-0 rounded-4 mb-4" role="alert">
+                <i class="bi bi-check-circle-fill me-2"></i> <span th:text="${success}">Changes saved!</span>
+            </div>
+
+
+
+            <div class="glass-card p-5">
+                <h3 class="fw-bold mb-4">Account Settings</h3>
+
+                <form th:action="@{/profile/update}" th:object="${userDto}" method="post" enctype="multipart/form-data">
+                    <input type="file" id="file-input" name="profileImage" style="display: none;" onchange="previewImage(this)">
+                    <!-- Global Errors Block (using #fields) -->
+                    <div th:if="${#fields.hasAnyErrors()}" class="alert alert-danger bg-danger text-white border-0 rounded-4 mb-4" role="alert">
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                        <ul class="mb-0">
+                            <li th:each="err : ${#fields.allErrors()}" th:text="${err}"></li>
+                        </ul>
+                    </div>
+                    <div class="row g-4">
+                        <!-- Username (Read-Only) -->
+                        <div class="col-md-6">
+                            <label class="form-label">Username</label>
+                            <input type="text" class="form-control" th:field="*{username}" disabled>
+                        </div>
+
+                        <!-- Nickname -->
+                        <div class="col-md-6">
+                            <label class="form-label">Display Nickname</label>
+                            <input type="text" class="form-control"
+                                   th:field="*{nickname}"
+                                   th:classappend="${#fields.hasErrors('nickname')} ? 'is-invalid' : ''"
+                                   placeholder="Enter nickname">
+                            <!-- Field Error Message -->
+                            <div class="invalid-feedback" th:if="${#fields.hasErrors('nickname')}" th:errors="*{nickname}"></div>
+                        </div>
+
+                        <!-- Status Input -->
+                        <div class="col-md-12">
+                            <label class="form-label">Current Status</label>
+                            <div class="input-group has-validation">
+                    <span class="input-group-text bg-dark border-secondary text-info">
+                        <i class="bi bi-chat-quote"></i>
+                    </span>
+                                <input type="text" class="form-control"
+                                       th:field="*{status}"
+                                       th:classappend="${#fields.hasErrors('status')} ? 'is-invalid' : ''"
+                                       placeholder="What's on your mind?">
+                                <div class="invalid-feedback" th:if="${#fields.hasErrors('status')}" th:errors="*{status}"></div>
+                            </div>
+                        </div>
+
+                        <!-- Description Textarea -->
+                        <div class="col-12">
+                            <label class="form-label">Bio / Description</label>
+                            <textarea class="form-control"
+                                      th:field="*{description}"
+                                      th:classappend="${#fields.hasErrors('description')} ? 'is-invalid' : ''"
+                                      rows="4"
+                                      placeholder="Tell people about yourself..."></textarea>
+                            <div class="invalid-feedback" th:if="${#fields.hasErrors('description')}" th:errors="*{description}"></div>
+                            <div class="text-end mt-1">
+                                <small class="text-muted" id="charCount">0 / 255</small>
+                            </div>
+                        </div>
+
+                        <!-- Google Account Status -->
+                        <div class="col-12">
+                            <label class="form-label d-block">Linked Services</label>
+                            <div class="p-3 rounded-4 d-flex align-items-center justify-content-between"
+                                 style="background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border);">
+                                <div class="d-flex align-items-center">
+                                    <i class="bi bi-google fs-4 me-3 text-info"></i>
+                                    <div>
+                                        <p class="mb-0 fw-bold">Google Drive</p>
+                                        <small th:text="${userDto.googleId != null ? 'Connected' : 'Not Connected'}"
+                                               th:class="${userDto.googleId != null ? 'text-success' : 'text-warning'}">Status</small>
+                                    </div>
+                                </div>
+                                <a th:if="${userDto.googleId == null}" href="/oauth2/authorization/google" class="btn btn-sm btn-outline-info rounded-pill">Connect</a>
+                                <span th:if="${userDto.googleId != null}" class="text-success fs-4"><i class="bi bi-check-all"></i></span>
+                            </div>
+                        </div>
+
+                        <div class="col-12 mt-5 text-end">
+                            <button type="submit" class="btn btn-save">Save All Changes</button>
+                        </div>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    function previewImage(input) {
+        if (input.files && input.files[0]) {
+            var reader = new FileReader();
+            reader.onload = function(e) {
+                document.querySelector('.profile-img').src = e.target.result;
+            }
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
 
-<div th:replace="~{fragments/notifications :: notification-logic}"></div>
+    // Simple character counter for the description
+    const textarea = document.querySelector('textarea[name="description"]');
+    const count = document.getElementById('charCount');
+
+    if(textarea) {
+        textarea.addEventListener('input', () => {
+            const length = textarea.value.length;
+            count.textContent = `${length} / 255`;
+            count.style.color = length > 200 ? '#ef4444' : '#94a3b8';
+        });
+    }
+</script>
+
 </body>
 </html>

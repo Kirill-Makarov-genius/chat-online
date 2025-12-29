@@ -20,10 +20,11 @@ public class UserDto {
     @Size(max = 255, message = "Description shouldn't be more than 255")
     String description;;
     String profilePicture;
+    String googleId;
 
     public String getProfilePictureUrl() {
         if (profilePicture == null || profilePicture.isEmpty()) {
-            return "https://ui-avatars.com/api/?name=" + this.username + "&background=random&color=fff";
+            return "/api/images/" + "default-avatar.webp";
         }
         return "/api/images/" + profilePicture; // Uses your ImageController
     }

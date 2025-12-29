@@ -17,6 +17,7 @@ public class UserMapper {
                 .status(user.getStatus())
                 .description(user.getDescription())
                 .profilePicture(user.getProfilePicture())
+                .googleId(user.getGoogleId())
                 .build();
     }
 }

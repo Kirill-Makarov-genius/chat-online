@@ -209,16 +209,9 @@ public class ConversationService {
             }
         }
 
-
-
-        if (targetUser != null){
-                if (targetUser.getProfilePicture() == null || targetUser.getProfilePicture().isEmpty()){
-                    return "https://ui-avatars.com/api/?name=" + targetUser.getNickname() + "&background=0D8ABC&color=fff";
-                }
-                else {
-                    return "/api/images/" + targetUser.getProfilePicture();
-                }
+        else{
+            return "/api/images/" + targetUser.getProfilePicture();
         }
-        return "https://ui-avatars.com/api/?name=??";
+
     }
 }
