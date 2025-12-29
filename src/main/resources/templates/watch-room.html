@@ -101,10 +101,21 @@
     <div class="row">
         <!-- Player -->
         <div class="col-xl-9 col-lg-8 mb-4">
-            <div class="video-wrapper shadow-lg">
-                <!-- Video.js Player -->
-                <video id="mainPlayer" class="video-js vjs-default-skin vjs-big-play-centered" controls preload="auto">
-                    <source th:src="@{/api/video/{id}(id=${room.fileId})}" type="video/mp4">
+            <!-- Replace your video container with this -->
+            <div id="videoContainer" class="video-wrapper shadow-lg">
+
+                <!-- Loading Screen -->
+                <div th:if="${room.status.name() == 'PROCESSING'}" id="loadingScreen"
+                     class="text-center p-5 bg-dark rounded-4 border border-secondary">
+                    <div class="spinner-border text-info mb-3" role="status"></div>
+                    <h4>Converting Video for your Room...</h4>
+                    <p class="text-muted">This usually takes 1-3 minutes for large files.</p>
+                </div>
+
+                <!-- Video Player (Hidden if processing) -->
+                <video th:if="${room.status.name() == 'READY'}" id="mainPlayer"
+                       class="video-js vjs-default-skin vjs-big-play-centered w-100" controls preload="auto">
+                    <source th:src="@{/api/local-video/{id}(id=${room.id})}" type="video/mp4">
                 </video>
             </div>
 
@@ -147,13 +158,11 @@
     };
     let isRemoteAction = false;
 
-    /* --- 2. Initialize Video.js with Mux.js support --- */
     const player = videojs('mainPlayer', {
-        html5: {
-            vhs: { overrideNative: true }, // Crucial for MKV/TS demuxing
-            nativeAudioTracks: false,
-            nativeVideoTracks: false
-        }
+        autoplay: false,
+        controls: true,
+        preload: 'auto',
+        fluid: true // Makes video responsive
     });
 
     /* --- 3. WebSocket Connection --- */
@@ -209,6 +218,9 @@
     function handleRemoteSignal(signal) {
         isRemoteAction = true; // Block local listeners from triggering
 
+        if (signal.action === "STATUS_UPDATE") {
+            location.reload();
+        }
         if (signal.action === "PLAY") {
             player.currentTime(signal.currentTime);
             player.play();

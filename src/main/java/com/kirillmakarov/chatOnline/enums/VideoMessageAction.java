@@ -4,5 +4,6 @@ public enum VideoMessageAction {
     PLAY,
     PAUSE,
     SEEK,
+    STATUS_UPDATE,
     VIDEO_SELECT
 }

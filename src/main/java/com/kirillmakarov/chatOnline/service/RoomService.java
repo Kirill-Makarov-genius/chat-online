@@ -41,7 +41,7 @@ public class RoomService {
 
     }
 
-    public RoomDto findRoomToJoin(String roomId){
+    public RoomDto findRoomById(String roomId){
         Room room = roomRepository.findById(roomId)
                 .orElseThrow(() -> new RoomNotFoundException("Room with id - " + roomId + " not found"));
 

@@ -11,6 +11,8 @@ public class RoomMapper {
         return RoomDto.builder()
                 .id(room.getId())
                 .name(room.getName())
+                .status(room.getStatus())
+                .localPath(room.getLocalPath())
                 .fileId(room.getFileId())
                 .fileName(room.getFileName())
                 .creatorName(room.getCreator().getNickname())

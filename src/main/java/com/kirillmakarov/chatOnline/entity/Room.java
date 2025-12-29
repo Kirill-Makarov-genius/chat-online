@@ -1,6 +1,7 @@
 package com.kirillmakarov.chatOnline.entity;
 
 
+import com.kirillmakarov.chatOnline.enums.RoomStatus;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -21,6 +22,11 @@ public class Room {
     private String id;
 
     private String name;
+
+    @Enumerated(EnumType.STRING)
+    private RoomStatus status = RoomStatus.PROCESSING;
+
+    private String localPath;
 
     @ManyToOne
     @JoinColumn(name="creator_id")

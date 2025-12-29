@@ -24,7 +24,7 @@ public class SecurityConfig {
                         .requestMatchers("/login", "/register", "/").permitAll()
                         .requestMatchers("/css/**", "/js/**", "/images**").permitAll()
                         .requestMatchers("/support").permitAll()
-                        .requestMatchers("/api/video/**").authenticated()
+                        .requestMatchers("/api/video/**", "api/local-video/**").authenticated()
                         .anyRequest().authenticated()
                 )
 

@@ -11,9 +11,11 @@ spring:
               client-id: ${GOOGLE_CLIENT_ID}
               client-secret: ${GOOGLE_CLIENT_SECRET}
               client-api-key: ${GOOGLE_API_KEY}
+              authorization-grant-type: authorization_code
           provider:
             google:
               issuer-uri: https://accounts.google.com
+              authorization-uri: https://accounts.google.com/o/oauth2/v2/auth?access_type=offline&prompt=consent
   threads:
     virtual:
       enabled: true
@@ -62,3 +64,6 @@ file:
 server:
   compression:
     enabled: false
+app:
+  storage:
+    video-temp: E:/movies/movies-together

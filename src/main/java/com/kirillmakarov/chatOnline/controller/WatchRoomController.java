@@ -7,6 +7,7 @@ import com.kirillmakarov.chatOnline.dto.RoomDto;
 import com.kirillmakarov.chatOnline.service.CustomUserDetailsService;
 import com.kirillmakarov.chatOnline.service.GoogleDriveService;
 import com.kirillmakarov.chatOnline.service.RoomService;
+import com.kirillmakarov.chatOnline.service.VideoConversionService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClient;
 import org.springframework.security.oauth2.client.annotation.RegisteredOAuth2AuthorizedClient;
@@ -15,6 +16,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.security.Principal;
 
 @Controller
@@ -25,7 +27,7 @@ public class WatchRoomController {
     private final RoomService roomService;
     private final CustomUserDetailsService userService;
     private final GoogleDriveService googleDriveService;
-
+    private final VideoConversionService videoConversionService;
 
 
     @GetMapping("/select-video")
@@ -50,18 +52,23 @@ public class WatchRoomController {
             @RequestParam String fileName,
             @RequestParam String roomName,
             @RegisteredOAuth2AuthorizedClient("google") OAuth2AuthorizedClient authorizedClient,
-            Principal principal){
+            Principal principal) throws IOException{
 
         String userName = principal.getName();
 
         RoomDto roomDto = roomService.createRoom(roomName, fileId, fileName, userName);
+
+        String accessToken = authorizedClient.getAccessToken().getTokenValue();
+
+        // We pass the stream and the Room ID to the async service
+        videoConversionService.convertDriveVideo(roomDto.getId(), fileId, accessToken);
 
         return "redirect:/watch/room/" + roomDto.getId();
     }
 
     @GetMapping("/room/{roomId}")
     public String joinRoom(@PathVariable String roomId, Model model){
-        RoomDto roomToJoin = roomService.findRoomToJoin(roomId);
+        RoomDto roomToJoin = roomService.findRoomById(roomId);
         model.addAttribute("room", roomToJoin);
         return "watch-room";
     }
