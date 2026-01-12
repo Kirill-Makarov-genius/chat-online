@@ -45,7 +45,11 @@
             <artifactId>postgresql</artifactId>
             <scope>runtime</scope>
         </dependency>
-
+        <!-- LiquiBase -->
+        <dependency>
+            <groupId>org.liquibase</groupId>
+            <artifactId>liquibase-core</artifactId>
+        </dependency>
         <!-- KAFKA -->
         <dependency>
             <groupId>org.springframework.kafka</groupId>
