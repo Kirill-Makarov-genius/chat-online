@@ -3,6 +3,7 @@ package com.kirillmakarov.chatOnline.service;
 import com.kirillmakarov.chatOnline.dto.RoomDto;
 import com.kirillmakarov.chatOnline.entity.Room;
 import com.kirillmakarov.chatOnline.entity.User;
+import com.kirillmakarov.chatOnline.enums.RoomStatus;
 import com.kirillmakarov.chatOnline.exception.NotUniqueIdRoom;
 import com.kirillmakarov.chatOnline.exception.RoomNotFoundException;
 import com.kirillmakarov.chatOnline.exception.UserNotFoundException;
@@ -33,6 +34,7 @@ public class RoomService {
 
         Room room = new Room();
         room.setName(roomName);
+        room.setStatus(RoomStatus.READY);
         room.setCreator(creator);
         room.setFileId(fileId);
         room.setFileName(fileName);

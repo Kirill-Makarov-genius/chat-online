@@ -1,0 +1,112 @@
+/* --- 1. DESIGN TOKENS (VARIABLES) --- */
+:root {
+    --bg-body: #080c14;
+    --glass-bg: rgba(255, 255, 255, 0.05);
+    --glass-border: rgba(255, 255, 255, 0.12);
+    --accent: #38bdf8;
+    --accent-glow: rgba(56, 189, 248, 0.4);
+
+    /* Readability Colors */
+    --text-primary: #ffffff;
+    --text-secondary: #cbd5e1;
+    --text-muted: #94a3b8;
+
+    --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* --- 2. BASE RESET & BACKGROUND --- */
+body {
+    background: radial-gradient(circle at bottom right, #1e293b, var(--bg-body));
+    background-attachment: fixed;
+    color: var(--text-secondary);
+    font-family: 'Inter', sans-serif;
+    min-height: 100vh;
+    margin: 0;
+}
+
+h1, h2, h3, h4, h5, h6, .fw-bold {
+    color: var(--text-primary);
+}
+
+a {
+    color: var(--accent);
+    transition: var(--transition);
+    text-decoration: none;
+}
+
+a:hover {
+    color: #fff;
+}
+
+/* --- 3. REUSABLE COMPONENTS --- */
+
+/* Glass Panel */
+.glass-card {
+    background: var(--glass-bg);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid var(--glass-border);
+    border-radius: 20px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    transition: var(--transition);
+}
+
+/* Form Inputs */
+.form-control {
+    background: rgba(0, 0, 0, 0.3) !important;
+    border: 1px solid var(--glass-border) !important;
+    color: var(--text-primary) !important;
+    border-radius: 12px !important;
+    padding: 12px 16px;
+}
+
+.form-control:focus {
+    background: rgba(0, 0, 0, 0.5) !important;
+    border-color: var(--accent) !important;
+    box-shadow: 0 0 12px var(--accent-glow) !important;
+    outline: none;
+}
+
+/* Placeholders */
+.form-control::placeholder {
+    color: var(--text-muted) !important;
+    font-style: italic;
+    opacity: 0.7;
+}
+
+/* Buttons */
+.btn-accent {
+    background: var(--accent);
+    color: #080c14;
+    font-weight: 700;
+    border-radius: 12px;
+    border: none;
+    transition: var(--transition);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.btn-accent:hover {
+    background: #ffffff;
+    transform: translateY(-3px);
+    box-shadow: 0 10px 20px var(--accent-glow);
+}
+
+/* Live Badge Animation */
+.badge-live {
+    background: #ef4444;
+    color: white;
+    font-weight: 700;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+    70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+}
+
+/* --- 4. UTILITIES --- */
+.text-accent { color: var(--accent) !important; }
+.bg-glass { background: var(--glass-bg); }
+.border-glass { border-color: var(--glass-border); }

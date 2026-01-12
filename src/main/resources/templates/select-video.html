@@ -1,41 +1,222 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
-    <title>Select Video</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
-</head>
-<body class="bg-light">
-<div class="container py-5">
-    <h2 class="mb-4">Create a Watch Room</h2>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Select Video | Chat Online</title>
 
-    <div class="row row-cols-1 row-cols-md-3 g-4">
-        <!-- Loop through Google Drive files -->
-        <div class="col" th:each="file : ${files}">
-            <div class="card h-100 shadow-sm">
-                <div class="card-body">
-                    <h5 class="card-title" th:text="${file.name}">Video Name</h5>
-                    <form th:action="@{/watch/create}" method="post">
-                        <input type="hidden" name="fileId" th:value="${file.id}">
-                        <input type="hidden" name="fileName" th:value="${file.name}">
-                        <div class="mb-2">
-                            <input type="text" name="roomName" class="form-control form-control-sm"
-                                   placeholder="Room Name (e.g. Movie Night)" required>
-                        </div>
-                        <button type="submit" class="btn btn-primary w-100">Create Room</button>
-                    </form>
-                </div>
+    <!-- Modern UI Dependencies -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        /* --- GLOBAL CSS VARIABLES (Copy to common file later) --- */
+        :root {
+            --bg-body: #080c14;
+            --glass-bg: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.12);
+            --accent: #38bdf8;
+            --accent-glow: rgba(56, 189, 248, 0.4);
+
+            /* Readability Colors */
+            --text-primary: #ffffff;      /* High contrast for titles */
+            --text-secondary: #cbd5e1;    /* Slate-300 for labels and paragraphs */
+            --text-muted: #94a3b8;        /* Slate-400 for placeholders/hints */
+        }
+
+        /* --- COMMON STYLES --- */
+        body {
+            background: radial-gradient(circle at bottom right, #1e293b, var(--bg-body));
+            background-attachment: fixed;
+            color: var(--text-secondary);
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
+            margin: 0;
+        }
+
+        h1, h2, h3, h4, h5, h6, .fw-bold {
+            color: var(--text-primary);
+        }
+
+        .glass-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        /* Input Styling */
+        .form-control {
+            background: rgba(0, 0, 0, 0.3) !important;
+            border: 1px solid var(--glass-border) !important;
+            color: var(--text-primary) !important;
+            border-radius: 12px !important;
+            padding: 12px 16px;
+        }
+
+        .form-control:focus {
+            background: rgba(0, 0, 0, 0.5) !important;
+            border-color: var(--accent) !important;
+            box-shadow: 0 0 12px var(--accent-glow) !important;
+        }
+
+        /* Placeholder Styling for Readability */
+        .form-control::placeholder {
+            color: var(--text-muted) !important;
+            font-style: italic;
+            opacity: 0.7;
+        }
+
+        /* Button Styling */
+        .btn-accent {
+            background: var(--accent);
+            color: #080c14;
+            font-weight: 700;
+            border-radius: 12px;
+            border: none;
+            transition: 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-accent:hover {
+            background: #ffffff;
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px var(--accent-glow);
+        }
+
+        /* --- PAGE SPECIFIC STYLES --- */
+        .video-card:hover {
+            border-color: var(--accent);
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .page-header {
+            border-bottom: 1px solid var(--glass-border);
+            padding-bottom: 2rem;
+            margin-bottom: 3rem;
+        }
+
+        .back-link {
+            color: var(--accent);
+            text-decoration: none;
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            display: inline-block;
+            margin-bottom: 0.5rem;
+            transition: 0.2s;
+        }
+
+        .back-link:hover {
+            color: #ffffff;
+            transform: translateX(-3px);
+        }
+
+        .icon-container {
+            height: 120px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0,0,0,0.2);
+            border-radius: 15px;
+            margin-bottom: 1.5rem;
+        }
+
+        .video-icon {
+            font-size: 4rem;
+            color: var(--accent);
+            filter: drop-shadow(0 0 10px var(--accent-glow));
+            opacity: 0.8;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container py-5">
+
+    <!-- Page Header -->
+    <div class="page-header">
+        <div class="row align-items-end">
+            <div class="col-md-8">
+                <a href="/watch/manage" class="back-link">
+                    <i class="bi bi-chevron-left"></i> Back to My Rooms
+                </a>
+                <h1 class="display-5 fw-bold mb-0">Select Video</h1>
+                <p class="text-secondary mt-2 mb-0">Choose a file from your Google Drive to start a new watch party.</p>
+            </div>
+            <div class="col-md-4 text-md-end d-none d-md-block">
+                <span class="badge rounded-pill px-3 py-2" style="background: rgba(56, 189, 248, 0.1); color: var(--accent); border: 1px solid var(--accent);">
+                    <i class="bi bi-google me-2"></i> Drive Sync Active
+                </span>
             </div>
         </div>
     </div>
 
-    <div th:if="${#lists.isEmpty(files)}" class="alert alert-warning mt-4">
-        No video files found in your Google Drive. Upload some first!
+    <!-- Video Selection Grid -->
+    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+
+        <!-- Loop: Active Files -->
+        <div class="col" th:each="file : ${files}">
+            <div class="glass-card video-card h-100 p-4">
+
+                <!-- Center Icon (Thumbnail Replacement) -->
+                <div class="icon-container">
+                    <i class="bi bi-file-earmark-play-fill video-icon"></i>
+                </div>
+
+                <div class="text-center mb-4">
+                    <h5 class="fw-bold text-truncate" th:text="${file.name}" th:title="${file.name}">Video Name</h5>
+                    <p class="small text-muted mb-0">Ready to stream</p>
+                </div>
+
+                <form th:action="@{/watch/create}" method="post">
+                    <input type="hidden" name="fileId" th:value="${file.id}">
+                    <input type="hidden" name="fileName" th:value="${file.name}">
+
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-uppercase opacity-75" style="letter-spacing: 1px;">Room Name</label>
+                        <input type="text" name="roomName" class="form-control"
+                               placeholder="e.g. Movie Night with Friends" required>
+                    </div>
+
+                    <button type="submit" class="btn btn-accent w-100 py-3 mt-2">
+                        Create Party <i class="bi bi-plus-lg ms-2"></i>
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- EMPTY STATE -->
+    <div th:if="${#lists.isEmpty(files)}" class="row justify-content-center mt-5">
+        <div class="col-md-6 text-center">
+            <div class="glass-card p-5">
+                <i class="bi bi-cloud-slash display-1 text-muted mb-4 d-block"></i>
+                <h3 class="fw-bold">No Videos Found</h3>
+                <p class="text-secondary">We couldn't find any supported video files in your Google Drive.<br>
+                    Try uploading an MP4 file and refreshing this page.</p>
+                <a href="https://drive.google.com" target="_blank" class="btn btn-outline-info rounded-pill px-4 mt-3">
+                    Open Google Drive <i class="bi bi-box-arrow-up-right ms-2"></i>
+                </a>
+            </div>
+        </div>
     </div>
 </div>
-<!-- !!! ВАЖНО: Сначала подключаем Bootstrap JS !!! -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
+
+
+
+<!-- Global Notifications Fragment -->
 <div th:replace="~{fragments/notifications :: global-notifications}"></div>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
 </body>
 </html>

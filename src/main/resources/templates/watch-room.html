@@ -1,155 +1,134 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title th:text="${room.name} + ' | Chat Online'">Watch Room</title>
 
-    <!-- Modern UI Dependencies -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+<head th:replace="~{fragments/head :: common-head(${room.name})}"></head>
 
-    <!-- Video.js & Mux.js (The MKV Engine) -->
-    <link href="https://vjs.zencdn.net/8.10.0/video-js.css" rel="stylesheet" />
-    <script src="https://vjs.zencdn.net/8.10.0/video.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/mux.js/6.3.0/mux.min.js"></script>
+<style>
+    /* Aspect Ratio for Player */
+    .video-wrapper {
+        background: #000;
+        border-radius: 16px;
+        overflow: hidden;
+        border: 1px solid var(--glass-border);
+        box-shadow: 0 20px 50px rgba(0,0,0,0.6);
+    }
 
-    <!-- WebSocket Libraries -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.6.1/sockjs.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+    .video-js {
+        width: 100% !important;
+        height: auto;
+        aspect-ratio: 16 / 9;
+    }
 
-    <style>
-        :root {
-            --bg-body: #080c14;
-            --glass-bg: rgba(255, 255, 255, 0.03);
-            --glass-border: rgba(255, 255, 255, 0.08);
-            --accent: #38bdf8;
-            --accent-glow: rgba(56, 189, 248, 0.4);
-        }
+    /* Sidebar Participant List */
+    .participant-list {
+        max-height: 300px;
+        overflow-y: auto;
+    }
 
-        body {
-            background: radial-gradient(circle at top right, #1e293b, var(--bg-body));
-            background-attachment: fixed;
-            color: #f1f5f9;
-            font-family: 'Inter', sans-serif;
-            min-height: 100vh;
-            overflow-x: hidden;
-        }
+    /* THEATER MODE: Mobile Landscape Logic */
+    @media (orientation: landscape) and (max-height: 500px) {
+        .header-main-card, .sidebar-section, .sync-info-card { display: none !important; }
+        .video-column { margin-bottom: 0 !important; width: 100% !important; }
+        .video-wrapper { border-radius: 0; border: none; }
+        .container-fluid { padding: 0 !important; }
+    }
 
-        .glass-card {
-            background: var(--glass-bg);
-            backdrop-filter: blur(12px);
-            border: 1px solid var(--glass-border);
-            border-radius: 20px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-        }
+    /* Mobile Portrait Tweaks */
+    @media (max-width: 768px) {
+        .header-main-card h4 { font-size: 1.1rem; }
+        .copy-box { font-size: 0.8rem; padding: 6px 12px; }
+    }
+</style>
 
-        .badge-live {
-            background: #ef4444;
-            font-weight: 700;
-            animation: pulse 2s infinite;
-        }
-        @keyframes pulse {
-            0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
-            70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
-        }
-
-        .video-wrapper {
-            background: #000;
-            border-radius: 16px;
-            overflow: hidden;
-            border: 1px solid var(--glass-border);
-        }
-
-        /* Video.js custom sizing */
-        .video-js {
-            width: 100% !important;
-            height: auto;
-            aspect-ratio: 16 / 9;
-        }
-
-        .sidebar-title { font-size: 0.9rem; text-transform: uppercase; color: var(--accent); font-weight: 700; }
-        .status-dot { height: 8px; width: 8px; background: #10b981; border-radius: 50%; display: inline-block; margin-right: 8px; }
-        .btn-accent { background: var(--accent); color: #000; font-weight: 600; border-radius: 12px; }
-        .copy-box { background: rgba(0,0,0,0.3); border: 1px dashed var(--glass-border); border-radius: 12px; padding: 8px 15px; cursor: pointer; }
-    </style>
-</head>
 <body>
 
-<div class="container-fluid px-4 py-4">
-    <!-- Header -->
-    <div class="glass-card p-3 mb-4 d-flex align-items-center justify-content-between">
+<div class="container-fluid px-3 px-md-4 py-3 py-md-4">
+
+    <!-- HEADER: Room Dashboard -->
+    <div class="glass-card header-main-card p-3 mb-3 mb-md-4 d-flex align-items-center justify-content-between">
         <div class="d-flex align-items-center">
-            <a href="/watch/manage" class="btn btn-link text-white me-3"><i class="bi bi-chevron-left"></i></a>
-            <div>
-                <h4 class="mb-0 fw-bold" th:text="${room.name}">Room Name</h4>
-                <p class=" mb-0 small"><i class="bi bi-file-earmark-play me-1"></i> <span th:text="${room.fileName}">video.mp4</span></p>
+            <a th:href="@{/watch/manage}" class="btn btn-link text-white ps-0 pe-2 pe-md-3">
+                <i class="bi bi-chevron-left fs-4"></i>
+            </a>
+            <div class="text-truncate" style="max-width: 180px; @media(min-width: 768px){max-width: 500px;}">
+                <h4 class="mb-0 fw-bold text-truncate" th:text="${room.name}">Room Name</h4>
+                <p class="mb-0 small  text-truncate">
+                    <i class="bi bi-file-earmark-play me-1"></i>
+                    <span th:text="${room.fileName}">video.mp4</span>
+                </p>
             </div>
         </div>
-        <div class="d-flex align-items-center gap-3">
-            <span class="badge badge-live px-3 py-2 rounded-pill">LIVE</span>
-            <div class="copy-box" onclick="copyRoomId()" id="roomLinkBox">
-                <span class="small me-2">ID:</span>
-                <span class="fw-bold text-info" th:text="${room.id}" id="roomIdText">ID</span>
-                <i class="bi bi-copy ms-2"></i>
+
+        <div class="d-flex align-items-center gap-2">
+            <span class="badge badge-live px-3 py-2 rounded-pill d-none d-sm-inline-block">LIVE</span>
+            <div class="copy-box d-flex align-items-center glass-card border-glass px-3 py-2"
+                 style="cursor: pointer; background: rgba(0,0,0,0.2);" onclick="copyRoomId()" id="roomLinkBox">
+                <span class="fw-bold text-accent me-2" th:text="${room.id}" id="roomIdText">ID</span>
+                <i class="bi bi-copy"></i>
             </div>
         </div>
     </div>
 
-    <div class="row">
-        <!-- Player -->
-        <div class="col-xl-9 col-lg-8 mb-4">
-            <!-- Replace your video container with this -->
-            <div id="videoContainer" class="video-wrapper shadow-lg">
-
-                <!-- Loading Screen -->
-                <div th:if="${room.status.name() == 'PROCESSING'}" id="loadingScreen"
-                     class="text-center p-5 bg-dark rounded-4 border border-secondary">
-                    <div class="spinner-border text-info mb-3" role="status"></div>
-                    <h4>Converting Video for your Room...</h4>
-                    <p class="">This usually takes 1-3 minutes for large files.</p>
-                </div>
-
-                <!-- Video Player (Hidden if processing) -->
-                <video th:if="${room.status.name() == 'READY'}" id="mainPlayer"
-                       class="video-js vjs-default-skin vjs-big-play-centered w-100" controls preload="auto">
-                    <source th:src="@{/api/video/{id}(id=${room.id})}" type="video/mp4">
+    <div class="row g-3 g-md-4">
+        <!-- PLAYER COLUMN -->
+        <div class="col-12 col-lg-8 col-xl-9 video-column">
+            <div class="video-wrapper shadow-lg">
+                <!-- Video.js Player -->
+                <video id="mainPlayer" class="video-js vjs-default-skin vjs-big-play-centered w-100"
+                       controls preload="auto">
+                    <source th:src="@{/api/video/{id}(id=${room.fileId})}" type="video/mp4">
                 </video>
             </div>
 
-            <div class="mt-4 p-4 glass-card d-flex justify-content-between align-items-center">
+            <!-- SYNC INFO CARD -->
+            <div class="mt-3 mt-md-4 p-3 p-md-4 glass-card d-flex justify-content-between align-items-center sync-info-card">
                 <div>
-                    <h5 class="mb-1 fw-bold">Synchronized Playback</h5>
-                    <p class="mb-0  small">Actions are synced via WebSockets.</p>
+                    <h6 class="mb-1 fw-bold text-accent">Synchronized Playback</h6>
+                    <p class="mb-0  small d-none d-md-block">Your actions are broadcasted to all participants via WebSockets.</p>
                 </div>
                 <div class="text-end">
                     <p class="mb-0 small ">Host</p>
-                    <p class="mb-0 fw-bold text-info" th:text="${room.creatorName}">Host Name</p>
+                    <p class="mb-0 fw-bold" th:text="${room.creatorName}">Host Name</p>
                 </div>
             </div>
         </div>
 
-        <!-- Sidebar -->
-        <div class="col-xl-3 col-lg-4">
+        <!-- SIDEBAR: Participants & Invite -->
+        <div class="col-12 col-lg-4 col-xl-3 sidebar-section">
             <div class="glass-card p-4 h-100">
-                <h6 class="sidebar-title mb-4">Participants</h6>
-                <div class="participant-item d-flex align-items-center mb-3">
-                    <div class="status-dot"></div>
-                    <span class="fw-bold" th:text="${room.creatorName}">Host</span>
+                <h6 class="text-uppercase small fw-bold text-accent mb-4" style="letter-spacing: 1px;">Participants</h6>
+
+                <div class="participant-list mb-4">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="rounded-circle bg-success me-3" style="width: 10px; height: 10px; box-shadow: 0 0 10px #10b981;"></div>
+                        <div>
+                            <span class="fw-bold d-block" th:text="${room.creatorName}">User</span>
+                            <small class="">Currently Watching</small>
+                        </div>
+                    </div>
+                    <!-- Future dynamic participants go here -->
                 </div>
-                <hr class="border-secondary">
-                <h6 class="sidebar-title mb-3">Invite</h6>
-                <button class="btn btn-accent w-100 py-3" onclick="copyRoomId()">Invite Friends <i class="bi bi-people-fill ms-2"></i></button>
+
+                <hr class="border-glass my-4">
+
+                <h6 class="text-uppercase small fw-bold text-accent mb-3" style="letter-spacing: 1px;">Invite Friends</h6>
+                <p class="small  mb-4">Anyone with the Room ID can join your session instantly.</p>
+
+                <button class="btn-accent w-100 py-3" onclick="copyRoomId()">
+                    Copy Link ID <i class="bi bi-link-45deg ms-1"></i>
+                </button>
             </div>
         </div>
     </div>
 </div>
-<div th:replace="~{fragments/notifications :: global-notifications}"></div>
 
+<!-- Load External Video.js Assets -->
+<link href="https://vjs.zencdn.net/8.10.0/video-js.css" rel="stylesheet" />
+<script src="https://vjs.zencdn.net/8.10.0/video.min.js"></script>
+
+<!-- WebSocket & Logic -->
 <script th:inline="javascript">
-    /* --- 1. Variables --- */
+    /* --- 1. Variables from Thymeleaf --- */
     const roomId = [[${room.id}]];
     const fileId = [[${room.fileId}]];
     const currentUser = [[${#authentication.name}]];
@@ -159,11 +138,11 @@
     };
     let isRemoteAction = false;
 
+    /* --- 2. Initialize Video.js --- */
     const player = videojs('mainPlayer', {
-        autoplay: false,
-        controls: true,
-        preload: 'auto',
-        fluid: true // Makes video responsive
+        fluid: true,
+        responsive: true,
+        playbackRates: [0.5, 1, 1.5, 2]
     });
 
     /* --- 3. WebSocket Connection --- */
@@ -172,7 +151,6 @@
     stompClient.debug = null;
 
     stompClient.connect({}, () => {
-        console.log("WebSocket Connected to room: " + roomId);
         stompClient.subscribe('/topic/video/' + roomId, (message) => {
             const signal = JSON.parse(message.body);
             if (signal.sender !== currentUser) {
@@ -180,75 +158,41 @@
             }
         });
     });
-    const roomStatus = [[${room.status.name()}]];
-
-    if (roomStatus === 'PROCESSING') {
-        const checkStatusInterval = setInterval(() => {
-            // Делаем легкий запрос к API, чтобы узнать статус
-            fetch(`/api/rooms/${roomId}/status`)
-                .then(response => response.json())
-                .then(status => {
-                    if (status === 'READY') {
-                        clearInterval(checkStatusInterval);
-                        location.reload(); // Перезагружаем, когда готово
-                    }
-                })
-                .catch(err => console.error("Error checking status:", err));
-        }, 5000); // Проверка каждые 5 секунд
-    }
 
     /* --- 4. Synchronization Logic --- */
 
-    // Seek to initial time once video metadata is ready
     player.ready(() => {
         player.one('loadedmetadata', () => {
             player.currentTime(initialState.time);
             if (initialState.isPlaying) {
-                player.play().catch(() => console.log("Autoplay blocked by browser."));
+                player.play().catch(() => console.log("User interaction required for play."));
             }
         });
     });
 
+    // Local Event Emitters
+    player.on('play', () => { if (!isRemoteAction) sendSignal("PLAY", player.currentTime()); });
+    player.on('pause', () => { if (!isRemoteAction) sendSignal("PAUSE", player.currentTime()); });
 
-
-    player.on('pause', () => {
-        if (!isRemoteAction) sendSignal("PAUSE", player.currentTime());
-    });
-    let lastBroadcastTime = 0; // Переменная для хранения последнего отправленного времени
-
+    let lastSeek = 0;
     player.on('seeked', () => {
         if (!isRemoteAction) {
-            const currentTime = player.currentTime();
-            if (Math.abs(currentTime - lastBroadcastTime) > 2) {
-                sendSignal("SEEK", currentTime);
-                lastBroadcastTime = currentTime;
+            const now = player.currentTime();
+            if (Math.abs(now - lastSeek) > 1) {
+                sendSignal("SEEK", now);
+                lastSeek = now;
             }
         }
     });
 
-
-    player.on('play', () => {
-        if (!isRemoteAction) {
-            lastBroadcastTime = player.currentTime();
-            sendSignal("PLAY", lastBroadcastTime);
-        }
-    });
     function sendSignal(action, time) {
-        const payload = {
-            action: action,
-            currentTime: time,
-            fileId: fileId,
-            sender: currentUser
-        };
-        stompClient.send("/app/video.sync/" + roomId, {}, JSON.stringify(payload));
+        stompClient.send("/app/video.sync/" + roomId, {}, JSON.stringify({
+            action: action, currentTime: time, fileId: fileId, sender: currentUser
+        }));
     }
 
     function handleRemoteSignal(signal) {
-        isRemoteAction = true; // Block local listeners from triggering
-
-        if (signal.action === "STATUS_UPDATE") {
-            location.reload();
-        }
+        isRemoteAction = true;
         if (signal.action === "PLAY") {
             player.currentTime(signal.currentTime);
             player.play();
@@ -257,20 +201,19 @@
         } else if (signal.action === "SEEK") {
             player.currentTime(signal.currentTime);
         }
-
-        // Delay resetting the flag to allow Video.js to finish state changes
         setTimeout(() => { isRemoteAction = false; }, 600);
     }
 
     /* --- 5. Utilities --- */
     function copyRoomId() {
-        const idText = document.getElementById('roomIdText').innerText;
-        navigator.clipboard.writeText(idText);
+        navigator.clipboard.writeText(roomId);
         const box = document.getElementById('roomLinkBox');
         const originalHtml = box.innerHTML;
         box.innerHTML = '<span class="text-success small fw-bold">Copied! <i class="bi bi-check-lg"></i></span>';
         setTimeout(() => { box.innerHTML = originalHtml; }, 2000);
     }
 </script>
+
+<div th:replace="~{fragments/notifications :: global-notifications}"></div>
 </body>
 </html>
