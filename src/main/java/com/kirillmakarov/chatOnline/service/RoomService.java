@@ -13,8 +13,11 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -42,6 +45,11 @@ public class RoomService {
 
     }
 
+    public List<RoomDto> findAllRoomsByHostUsername(String username){
+        List<Room> listOfRooms = roomRepository.findByCreator_Username(username);
+
+        return listOfRooms.stream().map(roomMapper::toDto).collect(Collectors.toList());
+    }
 
     public RoomDto findRoomById(String roomId){
         Room room = roomRepository.findById(roomId)
@@ -49,6 +57,13 @@ public class RoomService {
 
         return roomMapper.toDto(room);
     }
+
+    @Transactional
+    public void deleteRoomById(String roomId, String username){
+
+        roomRepository.deleteByIdAndCreator_Username(roomId, username);
+    }
+
     @Cacheable(value = "roomCache", key="#roomId")
     public RoomDto findRoomByIdForCached(String roomId){
         Room room = roomRepository.findById(roomId)

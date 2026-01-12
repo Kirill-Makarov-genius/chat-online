@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.*;
 import java.io.IOException;
 import java.io.InputStream;
 import java.security.Principal;
+import java.util.List;
 
 @Controller
 @RequestMapping("/watch")
@@ -28,6 +29,27 @@ public class WatchRoomController {
     private final CustomUserDetailsService userService;
     private final GoogleDriveService googleDriveService;
     private final VideoConversionService videoConversionService;
+
+
+
+
+    @GetMapping("/manage")
+    public String manageMyRooms(Principal principal, Model model){
+        String curUsername = principal.getName();
+
+        List<RoomDto> listOfRooms = roomService.findAllRoomsByHostUsername(curUsername);
+
+        model.addAttribute("listOfRooms", listOfRooms);
+
+        return "manage-rooms";
+
+    }
+
+    @PostMapping("/delete")
+    public String deleteRoom(@RequestParam String roomId, Principal principal){
+        roomService.deleteRoomById(roomId, principal.getName());
+        return "redirect:manage";
+    }
 
 
     @GetMapping("/select-video")
@@ -61,7 +83,7 @@ public class WatchRoomController {
         String accessToken = authorizedClient.getAccessToken().getTokenValue();
 
         // We pass the stream and the Room ID to the async service
-        videoConversionService.convertDriveVideo(roomDto.getId(), fileId, accessToken);
+//        videoConversionService.convertDriveVideo(roomDto.getId(), fileId, accessToken);
 
         return "redirect:/watch/room/" + roomDto.getId();
     }

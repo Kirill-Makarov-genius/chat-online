@@ -192,7 +192,11 @@
                             <li id="no-notif-msg" class="text-center p-3 text-muted small">No new messages</li>
                         </ul>
                     </div>
-                    <a href="/profile" class="btn btn-dark btn-sm rounded-3 border-secondary"><i class="bi bi-person-gear"></i></a>
+                    <a href="/profile" class="btn btn-dark btn-sm rounded-3 border-secondary"><i class="bi bi-gear"></i></a>
+                    <!-- NEW: Manage Rooms Button -->
+                    <a href="/watch/manage" class="btn btn-dark btn-sm rounded-3 border-secondary" title="My Watch Rooms">
+                        <i class="bi bi-collection-play text-warning"></i>
+                    </a>
                     <form th:action="@{/logout}" method="post" class="m-0">
                         <button type="submit" class="btn btn-logout btn-sm rounded-3"><i class="bi bi-box-arrow-right"></i></button>
                     </form>
@@ -235,7 +239,9 @@
             <div th:if="${activeConversation != null}" class="chat-area">
                 <div class="chat-header">
                     <div class="d-flex align-items-center">
-                        <img th:src="${activeConversation.conversationPicture}" class="avatar-img me-3" style="width: 42px; height: 42px;">
+                        <a th:href="@{/profile/users/{username}(username=${activeConversation.targetUsername})}">
+                            <img th:src="${activeConversation.conversationPicture}" class="avatar-img me-3" style="width: 42px; height: 42px;">
+                        </a>
                         <div>
                             <h6 class="mb-0 fw-bold text-white" th:text="${activeConversation.targetUsername}">Username</h6>
                             <small class="text-info small">Active Now</small>
@@ -305,6 +311,87 @@
             });
         });
     }
+
+    function addNotificationToUI(notification) {
+        // 1. Check if we are currently in this conversation.
+        // If yes, we don't need a notification (the chat socket handles the message bubble).
+        if (conversationId && notification.conversationId == conversationId) {
+            return;
+        }
+
+        // --- 2. Update the Red Badge Counter ---
+        var badge = document.getElementById("notificationBadge");
+        if (badge) {
+            var count = parseInt(badge.innerText) || 0;
+            badge.innerText = count + 1;
+            badge.style.display = "block"; // Make sure it's visible
+
+            // Optional: Add a bounce animation class if you have one
+        }
+
+        // --- 3. Add Item to Dropdown List ---
+        var notifList = document.getElementById("notificationList");
+        var noMsgItem = document.getElementById("no-notif-msg");
+
+        if (notifList) {
+            // Hide the "No new messages" placeholder
+            if (noMsgItem) {
+                noMsgItem.style.display = "none";
+            }
+
+            // Create new List Item
+            var li = document.createElement("li");
+
+            // We use your existing variables: notification.senderUsername, notification.content, etc.
+            // Adjust styles to match your dark theme (text-light, hover effects)
+            li.innerHTML = `
+                <a href="/chats/${notification.conversationId}" class="dropdown-item p-2 border-bottom border-secondary text-light">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-grow-1 overflow-hidden">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <strong class="small text-info">${notification.senderUsername}</strong>
+                                <small class="text-muted" style="font-size: 0.65rem;">Just now</small>
+                            </div>
+                            <div class="text-truncate small text-secondary" style="max-width: 200px;">
+                                ${notification.content || 'Sent an attachment'}
+                            </div>
+                        </div>
+                        <div class="ms-2">
+                             <span class="badge bg-primary rounded-circle p-1" style="width: 8px; height: 8px; display:block;"></span>
+                        </div>
+                    </div>
+                </a>
+            `;
+
+            // Insert after the "Notifications" header (which is usually index 0 or 1 depending on whitespace)
+            // Ideally, insert right after the header <li>
+            var header = notifList.querySelector(".dropdown-header").parentNode;
+            if (header && header.nextSibling) {
+                notifList.insertBefore(li, header.nextSibling);
+            } else {
+                notifList.appendChild(li);
+            }
+        }
+
+        // --- 4. Update Sidebar Preview (Left Panel) ---
+        // Find the chat item in the sidebar using the data attribute
+        var sidebarItem = document.querySelector(`.conversation-item[data-conversation-id="${notification.conversationId}"]`);
+
+        if (sidebarItem) {
+            // Update the preview text
+            var previewText = sidebarItem.querySelector('small.text-truncate');
+            if (previewText) {
+                previewText.innerText = notification.content;
+                previewText.style.color = "#fff"; // Highlight it briefly
+                previewText.style.fontWeight = "bold";
+            }
+
+            // Optional: Move this chat to the top of the list
+            // var parent = sidebarItem.parentNode;
+            // parent.insertBefore(sidebarItem, parent.firstChild);
+        }
+    }
+
 
     function sendMessage() {
         var content = messageInput.value.trim();

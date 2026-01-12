@@ -2,9 +2,12 @@ package com.kirillmakarov.chatOnline.seeder;
 
 
 
+import com.kirillmakarov.chatOnline.dto.UserDto;
 import com.kirillmakarov.chatOnline.entity.*;
 import com.kirillmakarov.chatOnline.enums.ConversationType;
 import com.kirillmakarov.chatOnline.enums.MessageStatus;
+import com.kirillmakarov.chatOnline.exception.UserNotFoundException;
+import com.kirillmakarov.chatOnline.mapper.UserMapper;
 import com.kirillmakarov.chatOnline.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
@@ -25,6 +28,8 @@ public class DatabaseSeeder implements CommandLineRunner {
     private final MessageRepository messageRepository;
     private final PasswordEncoder passwordEncoder; // Ensure you have a SecurityConfig
 
+    private final UserMapper userMapper;
+
     @Override
     @Transactional
     public void run(String... args) throws Exception {
@@ -38,11 +43,11 @@ public class DatabaseSeeder implements CommandLineRunner {
         System.out.println("Seeding database...");
 
         // --- STEP 1: CREATE USERS ---
-        User john = createUser("john_doe", "john@kirillmakarov.com");
-        User jane = createUser("jane_doe", "jane@kirillmakarov.com");
-        User mike = createUser("mike_smith", "mike@kirillmakarov.com");
+        UserDto john = createUser("john_doe", "john@kirillmakarov.com");
+        UserDto jane = createUser("jane_doe", "jane@kirillmakarov.com");
+        UserDto mike = createUser("mike_smith", "mike@kirillmakarov.com");
 
-        userRepository.saveAll(Arrays.asList(john, jane, mike));
+
 
         // --- STEP 2: CREATE PRIVATE CHAT (John & Jane) ---
         Conversation privateChat = new Conversation();
@@ -76,27 +81,32 @@ public class DatabaseSeeder implements CommandLineRunner {
 
     // --- HELPER METHODS ---
 
-    private User createUser(String username, String email) {
+    private UserDto createUser(String username, String email) {
         User user = new User();
         user.setUsername(username);
         user.setNickname(email);
         user.setPassword(passwordEncoder.encode("password123")); // Default password
-        return user;
+        userRepository.save(user);
+        return userMapper.toDto(user);
     }
 
-    private void addParticipant(User user, Conversation conversation, boolean isAdmin) {
+    private void addParticipant(UserDto user, Conversation conversation, boolean isAdmin) {
+        User userParticipant = userRepository.findByUsername(user.getUsername())
+                .orElseThrow(() -> new UserNotFoundException("User with username - " + user.getUsername() + " doesn't exist"));
         ChatParticipant participant = ChatParticipant.builder()
-                .user(user)
+                .user(userParticipant)
                 .conversation(conversation)
                 .isAdmin(isAdmin) // Matches your entity field name (typo in entity: isAmin vs isAdmin)
                 .build();
         participantRepository.save(participant);
     }
 
-    private void createMessage(Conversation conversation, User sender, String content) {
+    private void createMessage(Conversation conversation, UserDto sender, String content) {
+        User userSender = userRepository.findByUsername(sender.getUsername())
+                .orElseThrow(() -> new UserNotFoundException("User with username - " + sender.getUsername() + " not found!"));
         Message message = new Message();
         message.setConversation(conversation);
-        message.setSender(sender);
+        message.setSender(userSender);
         message.setContent(content);
         message.setStatus(MessageStatus.SENT); // Enum: SENT, DELIVERED, READ
         
