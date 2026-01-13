@@ -9,7 +9,7 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: password
     ports:
-      -  "5432:5432"
+      - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -18,34 +18,31 @@ services:
       timeout: 5s
       retries: 5
 
-  zookeeper:
-    image: confluentinc/cp-zookeeper:7.5.0
-    container_name: chat-zookeeper
-    environment:
-      ZOOKEEPER_CLIENT_PORT: 2181
-      ZOOKEEPER_TICK_TIME: 2000
-    ports:
-      - "2181:2181"
   kafka:
     image: confluentinc/cp-kafka:7.5.0
     container_name: chat-kafka
-    depends_on:
-      - zookeeper
     ports:
       - "9092:9092"
     environment:
-      KAFKA_BROKER_ID: 1
-      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-      # Listeners: Internal for Docker (kafka:29092), External for Localhost (localhost:9092)
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
-      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: 'broker,controller'
+      KAFKA_CONTROLLER_QUORUM_VOTERS: '1@kafka:29093'
+      KAFKA_CONTROLLER_LISTENER_NAMES: 'CONTROLLER'
+      KAFKA_LISTENERS: 'PLAINTEXT://kafka:29092,CONTROLLER://kafka:29093,PLAINTEXT_HOST://0.0.0.0:9092'
+      KAFKA_ADVERTISED_LISTENERS: 'PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092'
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: 'CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT'
+      KAFKA_INTER_BROKER_LISTENER_NAME: 'PLAINTEXT'
+      CLUSTER_ID: 'MkU3OEVBNTcwNTJENDM2Qk'
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
     healthcheck:
-      test: nc -z localhost 9092 || exit 1
+      test: ["CMD", "kafka-broker-api-versions", "--bootstrap-server", "localhost:9092"]
       interval: 10s
-      timeout: 5s
-      retries: 5
+      timeout: 10s
+      retries: 10
+      start_period: 30s # Даем Kafka время на генерацию метаданных KRaft
 
   app:
     build: .
@@ -66,15 +63,11 @@ services:
       DB_URL: jdbc:postgresql://db:5432/chat-online-db
       DB_USER: postgres
       DB_PASSWORD: password
-
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
-
-      # --- ADD THESE MISSING MAIL VARIABLES ---
       MAIL_HOST: ${MAIL_HOST}
       MAIL_PORT: ${MAIL_PORT}
       MAIL_USERNAME: ${MAIL_USERNAME}
       MAIL_PASSWORD: ${MAIL_PASSWORD}
-
       DDL_AUTO: update
       SHOW_SQL: "true"
 
