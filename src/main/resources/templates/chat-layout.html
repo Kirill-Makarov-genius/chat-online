@@ -2,9 +2,10 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"> <!-- UPDATED: Запрет зума -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Messenger | Chat Online</title>
 
+    <!-- Modern UI Dependencies -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -18,47 +19,42 @@
             --accent: #38bdf8;
             --msg-sent: rgba(56, 189, 248, 0.2);
             --msg-received: rgba(255, 255, 255, 0.08);
-            --text-main: #f8fafc;
+            --text-main: #f8fafc; /* Ultra Light Text */
             --text-muted: #feffffbf
         }
 
+        /* --- 1. FULL SCREEN LOCK (Edge-to-Edge) --- */
         html, body {
-            height: 100dvh;
-            width: 100%; /* ИЗМЕНЕНО: 100vw часто вызывает прокрутку, 100% безопаснее */
-            max-width: 100%; /* Страховка */
+            height: 100vh;
+            width: 100vw;
             margin: 0 !important;
             padding: 0 !important;
-            overflow: hidden; /* Скрывает скролл глобально */
-            overflow-x: hidden; /* ИЗМЕНЕНО: Жестко запрещаем горизонтальный скролл */
+            overflow: hidden;
             background-color: var(--bg-body);
             font-family: 'Inter', sans-serif;
             color: var(--text-main);
-            position: relative; /* Фикс для некоторых мобильных браузеров */
         }
 
         .main-row {
-            height: 100dvh;
-            width: 100%;
+            height: 100vh;
             margin: 0 !important;
             padding: 0 !important;
-            overflow-x: hidden;
         }
 
-        /* --- SIDEBAR --- */
+        /* --- 2. SIDEBAR --- */
         .sidebar {
-            height: 100dvh;
+            height: 100vh;
             display: flex;
             flex-direction: column;
             background: var(--sidebar-bg);
+            backdrop-filter: blur(20px);
             border-right: 1px solid var(--glass-border);
             padding: 0 !important;
-            z-index: 10;
         }
 
         .sidebar-header {
             padding: 20px;
-            height: 75px; /* Фиксированная высота */
-            flex-shrink: 0; /* Не сжимать */
+            height: 75px;
             border-bottom: 1px solid var(--glass-border);
             display: flex;
             align-items: center;
@@ -68,7 +64,6 @@
         .chat-list {
             flex-grow: 1;
             overflow-y: auto;
-            -webkit-overflow-scrolling: touch; /* Плавный скролл на iOS */
         }
 
         .conversation-item {
@@ -87,14 +82,12 @@
             border-left: 3px solid var(--accent);
         }
 
-        /* --- CHAT AREA --- */
+        /* --- 3. CHAT AREA --- */
         .chat-column {
-            height: 100dvh;
+            height: 100vh;
             padding: 0 !important;
             background: var(--chat-bg);
-            /* На мобильных это будет перекрывать сайдбар, если активно */
         }
-
         .chat-area {
             height: 100%;
             display: flex;
@@ -104,120 +97,91 @@
 
         .chat-header {
             height: 75px;
-            flex-shrink: 0; /* Не сжимать при открытии клавиатуры */
-            background: rgba(30, 41, 59, 0.95); /* Чуть плотнее фон */
+            background: rgba(30, 41, 59, 0.7);
             backdrop-filter: blur(10px);
             border-bottom: 1px solid var(--glass-border);
-            padding: 0 15px; /* Чуть меньше отступы для мобилок */
+            padding: 0 25px;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            z-index: 20;
         }
 
         .messages-box {
             flex-grow: 1;
             overflow-y: auto;
-            padding: 15px;
+            padding: 25px;
             display: flex;
             flex-direction: column;
-            -webkit-overflow-scrolling: touch;
-            /* Важно для прокрутки под клавиатурой */
-            scroll-behavior: smooth;
         }
 
-        /* Сообщения */
-        .message-container { max-width: 85%; margin-bottom: 12px; display: flex; flex-direction: column; }
+        .message-container { max-width: 75%; margin-bottom: 12px; display: flex; flex-direction: column; }
         .message-sent { align-self: flex-end; align-items: flex-end; }
         .message-received { align-self: flex-start; align-items: flex-start; }
 
         .msg-bubble {
-            padding: 10px 14px;
+            padding: 10px 16px;
             border-radius: 18px;
             border: 1px solid var(--glass-border);
             font-size: 0.95rem;
             line-height: 1.4;
-            word-wrap: break-word;
-            word-break: break-word; /* ДОБАВЛЕНО: Ломает длинные слова/ссылки */
-            max-width: 100%; /* Страховка */
         }
         .message-sent .msg-bubble { background: var(--msg-sent); color: #fff; border-bottom-right-radius: 4px; }
         .message-received .msg-bubble { background: var(--msg-received); color: #fff; border-bottom-left-radius: 4px; }
 
         .msg-time { font-size: 0.65rem; margin-top: 4px; color: var(--text-muted); }
 
-        /* --- FOOTER & INPUT --- */
+        /* --- 4. FOOTER & LIGHTER INPUT --- */
         .chat-footer {
-            padding: 10px 15px;
-            background: rgba(30, 41, 59, 1); /* Непрозрачный фон, чтобы не просвечивали сообщения */
+            padding: 15px 25px;
+            background: rgba(30, 41, 59, 0.9);
             border-top: 1px solid var(--glass-border);
-            flex-shrink: 0; /* Не сжимать footer */
-            /* UPDATED: Фикс для iOS Safari (safe area) */
-            padding-bottom: env(safe-area-inset-bottom, 15px);
         }
-
         .input-group-custom {
             background: rgba(0, 0, 0, 0.3);
             border: 1px solid var(--glass-border);
-            border-radius: 20px;
-            padding: 4px 12px;
+            border-radius: 14px;
+            padding: 6px 12px;
             display: flex;
             align-items: center;
         }
-
+        /* Lighter Text inside Input */
         .chat-input {
             background: transparent !important;
             border: none !important;
-            color: var(--text-main) !important;
+            color: var(--text-main) !important; /* LIGHTER TEXT */
             font-size: 1rem;
             box-shadow: none !important;
-            height: 40px; /* Фиксированная высота */
         }
-        .chat-input::placeholder { color: var(--text-muted); opacity: 0.7; }
-        .chat-input:focus { outline: none; }
+        .chat-input::placeholder {
+            color: var(--text-muted);
+            opacity: 0.7;
+        }
 
-        /* Кнопки и утилиты */
+        /* --- BUTTONS --- */
         .btn-logout {
             background: rgba(239, 68, 68, 0.1);
             color: #ef4444;
             border: 1px solid rgba(239, 68, 68, 0.15);
+            transition: 0.3s;
         }
-        .avatar-img { width: 40px; height: 40px; border-radius: 12px; object-fit: cover; border: 1px solid var(--glass-border); }
+        .btn-logout:hover { background: #ef4444; color: #fff; }
 
-        /* --- UPDATED: MOBILE LOGIC --- */
-        /* Показываем кнопку "Назад" только на мобильных */
-        .mobile-back-btn { display: none; }
-
-        @media (max-width: 767.98px) {
-            .mobile-back-btn { display: block; margin-right: 10px; color: var(--text-main); font-size: 1.2rem; }
-
-            /* Если чат не выбран, скрываем колонку чата на мобильных */
-            .show-sidebar-only .chat-column { display: none !important; }
-            .show-sidebar-only .sidebar { display: flex !important; width: 100%; }
-
-            /* Если чат выбран, скрываем сайдбар на мобильных */
-            .show-chat-only .sidebar { display: none !important; }
-            .show-chat-only .chat-column { display: flex !important; width: 100%; }
-
-            /* Скрываем кнопку Watch Together на очень узких экранах, оставляя иконку */
-            .watch-btn-text { display: none; }
-        }
+        /* UTILS */
+        .avatar-img { width: 45px; height: 45px; border-radius: 12px; object-fit: cover; border: 1px solid var(--glass-border); }
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-thumb { background: var(--glass-border); border-radius: 10px; }
     </style>
 </head>
 <body>
 
 <div class="container-fluid p-0 m-0 overflow-hidden">
-    <!-- UPDATED: Добавляем классы логики отображения в зависимости от activeConversation -->
-    <div class="row main-row g-0"
-         th:classappend="${activeConversation != null} ? 'show-chat-only' : 'show-sidebar-only'">
+    <div class="row main-row g-0">
 
         <!-- ================= SIDEBAR ================= -->
-        <!-- Добавляем col-12 для мобильных -->
-        <div class="col-12 col-md-4 col-lg-3 sidebar">
+        <div class="col-md-4 col-lg-3 sidebar">
             <div class="sidebar-header">
                 <a href="/" class="text-decoration-none"><h5 class="mb-0 fw-bold text-white">Chats</h5></a>
                 <div class="d-flex align-items-center gap-2">
-                    <!-- Уведомления и кнопки (без изменений) -->
                     <div class="dropdown">
                         <button class="btn btn-dark btn-sm rounded-3 border-secondary" type="button" data-bs-toggle="dropdown">
                             <i class="bi bi-bell text-info"></i>
@@ -229,7 +193,10 @@
                         </ul>
                     </div>
                     <a href="/profile" class="btn btn-dark btn-sm rounded-3 border-secondary"><i class="bi bi-gear"></i></a>
-                    <a href="/watch/manage" class="btn btn-dark btn-sm rounded-3 border-secondary"><i class="bi bi-collection-play text-warning"></i></a>
+                    <!-- NEW: Manage Rooms Button -->
+                    <a href="/watch/manage" class="btn btn-dark btn-sm rounded-3 border-secondary" title="My Watch Rooms">
+                        <i class="bi bi-collection-play text-warning"></i>
+                    </a>
                     <form th:action="@{/logout}" method="post" class="m-0">
                         <button type="submit" class="btn btn-logout btn-sm rounded-3"><i class="bi bi-box-arrow-right"></i></button>
                     </form>
@@ -239,7 +206,7 @@
             <div class="p-3">
                 <form action="/chats/open" method="post" class="input-group-custom">
                     <i class="bi bi-search text-info me-2"></i>
-                    <input type="text" name="targetUsername" class="form-control chat-input" placeholder="Search..." required>
+                    <input type="text" name="targetUsername" class="form-control chat-input" placeholder="Search friends..." required>
                 </form>
             </div>
 
@@ -260,35 +227,28 @@
         </div>
 
         <!-- ================= CHAT AREA ================= -->
-        <!-- Добавляем col-12 для мобильных -->
-        <div class="col-12 col-md-8 col-lg-9 chat-column">
+        <div class="col-md-8 col-lg-9 chat-column">
 
-            <!-- NO CHAT SELECTED (Только на десктопе будет видно благодаря CSS) -->
+            <!-- NO CHAT SELECTED -->
             <div th:if="${activeConversation == null}" class="chat-area d-flex flex-column justify-content-center align-items-center">
                 <i class="bi bi-chat-left-dots text-info opacity-25" style="font-size: 5rem;"></i>
-                <h3 class="mt-3 fw-light text-muted">Select a chat</h3>
+                <h3 class="mt-3 fw-light text-muted">Select a chat to begin</h3>
             </div>
 
             <!-- ACTIVE CHAT -->
             <div th:if="${activeConversation != null}" class="chat-area">
                 <div class="chat-header">
-                    <div class="d-flex align-items-center" style="min-width: 0;"> <!-- min-width fix for flex child -->
-
-                        <!-- UPDATED: Кнопка НАЗАД (видна только на мобильном) -->
-                        <a href="/chats" class="mobile-back-btn text-decoration-none">
-                            <i class="bi bi-arrow-left"></i>
+                    <div class="d-flex align-items-center">
+                        <a th:href="@{/profile/users/{username}(username=${activeConversation.targetUsername})}">
+                            <img th:src="${activeConversation.conversationPicture}" class="avatar-img me-3" style="width: 42px; height: 42px;">
                         </a>
-
-                        <a th:href="@{/profile/{username}(username=${activeConversation.targetUsername})}">
-                            <img th:src="${activeConversation.conversationPicture}" class="avatar-img me-3" style="width: 40px; height: 40px;">
-                        </a>
-                        <div class="text-truncate">
-                            <h6 class="mb-0 fw-bold text-white text-truncate" th:text="${activeConversation.targetUsername}">Username</h6>
-                            <small class="text-info small">Active</small>
+                        <div>
+                            <h6 class="mb-0 fw-bold text-white" th:text="${activeConversation.targetUsername}">Username</h6>
+                            <small class="text-info small">Active Now</small>
                         </div>
                     </div>
-                    <a href="/watch/select-video" class="btn btn-outline-info btn-sm rounded-pill px-3 ms-2">
-                        <i class="bi bi-play-fill"></i> <span class="watch-btn-text">Watch</span>
+                    <a href="/watch/select-video" class="btn btn-outline-info btn-sm rounded-pill px-4">
+                        <i class="bi bi-play-fill"></i> Watch Together
                     </a>
                 </div>
 
@@ -315,7 +275,7 @@
 <input type="hidden" id="currentConversationId" th:value="${activeConversation != null ? activeConversation.id : ''}">
 <input type="hidden" id="currentUsername" th:value="${username}">
 
-<!-- SCRIPTS -->
+<!-- SCRIPTS (UNCHANGED LOGIC) -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.1.4/sockjs.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
@@ -330,26 +290,11 @@
     document.addEventListener("DOMContentLoaded", function() {
         scrollToBottom();
         connect();
-
-        // UPDATED: Фикс скролла при открытии клавиатуры на Android
-        if(messageArea) {
-            window.addEventListener('resize', function() {
-                if(document.activeElement === messageInput) {
-                    scrollToBottom();
-                }
-            });
-        }
-
         if (messageInput) {
             messageInput.addEventListener("keypress", (e) => { if (e.key === "Enter") sendMessage(); });
-            // Убираем автофокус на мобильных, чтобы клавиатура не прыгала сразу
-            if(window.innerWidth > 768) {
-                messageInput.focus();
-            }
+            messageInput.focus();
         }
     });
-
-    // ... (Остальные JS функции connect, addNotificationToUI и т.д. остаются без изменений) ...
 
     function connect() {
         var socket = new SockJS('/ws');
@@ -368,23 +313,91 @@
     }
 
     function addNotificationToUI(notification) {
-       // ... (код из вашего предыдущего вопроса)
-        if (conversationId && notification.conversationId == conversationId) return;
+        // 1. Check if we are currently in this conversation.
+        // If yes, we don't need a notification (the chat socket handles the message bubble).
+        if (conversationId && notification.conversationId == conversationId) {
+            return;
+        }
+
+        // --- 2. Update the Red Badge Counter ---
         var badge = document.getElementById("notificationBadge");
         if (badge) {
             var count = parseInt(badge.innerText) || 0;
             badge.innerText = count + 1;
-            badge.style.display = "block";
+            badge.style.display = "block"; // Make sure it's visible
+
+            // Optional: Add a bounce animation class if you have one
         }
-        // ... (остальной код уведомлений)
+
+        // --- 3. Add Item to Dropdown List ---
+        var notifList = document.getElementById("notificationList");
+        var noMsgItem = document.getElementById("no-notif-msg");
+
+        if (notifList) {
+            // Hide the "No new messages" placeholder
+            if (noMsgItem) {
+                noMsgItem.style.display = "none";
+            }
+
+            // Create new List Item
+            var li = document.createElement("li");
+
+            // We use your existing variables: notification.senderUsername, notification.content, etc.
+            // Adjust styles to match your dark theme (text-light, hover effects)
+            li.innerHTML = `
+                <a href="/chats/${notification.conversationId}" class="dropdown-item p-2 border-bottom border-secondary text-light">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-grow-1 overflow-hidden">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <strong class="small text-info">${notification.senderUsername}</strong>
+                                <small class="text-muted" style="font-size: 0.65rem;">Just now</small>
+                            </div>
+                            <div class="text-truncate small text-secondary" style="max-width: 200px;">
+                                ${notification.content || 'Sent an attachment'}
+                            </div>
+                        </div>
+                        <div class="ms-2">
+                             <span class="badge bg-primary rounded-circle p-1" style="width: 8px; height: 8px; display:block;"></span>
+                        </div>
+                    </div>
+                </a>
+            `;
+
+            // Insert after the "Notifications" header (which is usually index 0 or 1 depending on whitespace)
+            // Ideally, insert right after the header <li>
+            var header = notifList.querySelector(".dropdown-header").parentNode;
+            if (header && header.nextSibling) {
+                notifList.insertBefore(li, header.nextSibling);
+            } else {
+                notifList.appendChild(li);
+            }
+        }
+
+        // --- 4. Update Sidebar Preview (Left Panel) ---
+        // Find the chat item in the sidebar using the data attribute
+        var sidebarItem = document.querySelector(`.conversation-item[data-conversation-id="${notification.conversationId}"]`);
+
+        if (sidebarItem) {
+            // Update the preview text
+            var previewText = sidebarItem.querySelector('small.text-truncate');
+            if (previewText) {
+                previewText.innerText = notification.content;
+                previewText.style.color = "#fff"; // Highlight it briefly
+                previewText.style.fontWeight = "bold";
+            }
+
+            // Optional: Move this chat to the top of the list
+            // var parent = sidebarItem.parentNode;
+            // parent.insertBefore(sidebarItem, parent.firstChild);
+        }
     }
+
 
     function sendMessage() {
         var content = messageInput.value.trim();
         if(content && stompClient) {
             stompClient.send("/app/conversation/" + conversationId + "/sendMessage", {}, JSON.stringify({content: content, conversationId: conversationId}));
             messageInput.value = '';
-            messageInput.focus(); // Возвращаем фокус после отправки
         }
     }
 
@@ -398,12 +411,7 @@
         scrollToBottom();
     }
 
-    function scrollToBottom() {
-        if (messageArea) {
-            messageArea.scrollTop = messageArea.scrollHeight;
-        }
-    }
-
+    function scrollToBottom() { if (messageArea) messageArea.scrollTop = messageArea.scrollHeight; }
     function formatTime(s) { return s ? new Date(s).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) : "Now"; }
 </script>
 </body>

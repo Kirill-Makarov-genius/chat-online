@@ -1,67 +1,33 @@
 version: '3.8'
 
 services:
-  # ---------------------------------------------
-  # 1. NGINX PROXY MANAGER (Вход и SSL)
-  # ---------------------------------------------
-  npm:
-    image: 'jc21/nginx-proxy-manager:latest'
-    container_name: nginx-proxy-manager
-    restart: unless-stopped
-    ports:
-      - '80:80'    # HTTP
-      - '81:81'    # Админка
-      - '443:443'  # HTTPS
-    volumes:
-      - ./npm-data:/data
-      - ./npm-letsencrypt:/etc/letsencrypt
-    networks:
-      - chat-net
-    depends_on:
-      - app
-
-  # ---------------------------------------------
-  # 2. DATABASE (PostgreSQL)
-  # ---------------------------------------------
   db:
     image: postgres:16-alpine
     container_name: chat-online-db
-    restart: always
     environment:
       POSTGRES_DB: chat-online-db
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-password} # Читает из .env или использует 'password'
-    # Порт 5432 открываем наружу только если нужно подключаться через DBeaver с компьютера
-    # Для безопасности лучше закомментировать ports, если доступ нужен только приложению
+      POSTGRES_PASSWORD: password
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-    networks:
-      - chat-net
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 5s
       timeout: 5s
       retries: 5
 
-  # ---------------------------------------------
-  # 3. KAFKA (KRaft mode - без Zookeeper)
-  # ---------------------------------------------
   kafka:
     image: confluentinc/cp-kafka:7.5.0
     container_name: chat-kafka
-    restart: always
     ports:
-      - "9092:9092" # Внешний доступ (если нужно)
+      - "9092:9092"
     environment:
       KAFKA_NODE_ID: 1
       KAFKA_PROCESS_ROLES: 'broker,controller'
       KAFKA_CONTROLLER_QUORUM_VOTERS: '1@kafka:29093'
       KAFKA_CONTROLLER_LISTENER_NAMES: 'CONTROLLER'
-      # Слушатели:
-      # PLAINTEXT: Внутренний (для App) на порту 29092
-      # PLAINTEXT_HOST: Внешний (для отладки) на порту 9092
       KAFKA_LISTENERS: 'PLAINTEXT://kafka:29092,CONTROLLER://kafka:29093,PLAINTEXT_HOST://0.0.0.0:9092'
       KAFKA_ADVERTISED_LISTENERS: 'PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092'
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: 'CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT'
@@ -71,47 +37,33 @@ services:
       KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
-    volumes:
-      - kafka_data:/var/lib/kafka/data
-    networks:
-      - chat-net
     healthcheck:
-      test: ["CMD", "kafka-broker-api-versions", "--bootstrap-server", "kafka:29092"]
+      test: ["CMD", "kafka-broker-api-versions", "--bootstrap-server", "localhost:9092"]
       interval: 10s
       timeout: 10s
       retries: 10
-      start_period: 30s
+      start_period: 30s # Даем Kafka время на генерацию метаданных KRaft
 
-  # ---------------------------------------------
-  # 4. ВАШЕ ПРИЛОЖЕНИЕ
-  # ---------------------------------------------
   app:
     build: .
     container_name: chat_app
-    restart: always
     env_file: .env
     depends_on:
       db:
         condition: service_healthy
       kafka:
         condition: service_healthy
-    # Expose открывает порт только внутри сети Docker (для Nginx Proxy Manager)
-    expose:
-      - "8080"
+    ports:
+      - "8080:8080"
     volumes:
       - ./uploads/:/app/uploads
-    networks:
-      - chat-net
     environment:
       SERVER_PORT: 8080
       VIDEO_STORAGE_PATH: /app/uploads
-      # Используем имя сервиса 'db'
       DB_URL: jdbc:postgresql://db:5432/chat-online-db
       DB_USER: postgres
-      DB_PASSWORD: ${DB_PASSWORD:-password}
-      # Используем имя сервиса 'kafka' и внутренний порт 29092
+      DB_PASSWORD: password
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
-      # Почта
       MAIL_HOST: ${MAIL_HOST}
       MAIL_PORT: ${MAIL_PORT}
       MAIL_USERNAME: ${MAIL_USERNAME}
@@ -119,15 +71,5 @@ services:
       DDL_AUTO: update
       SHOW_SQL: "true"
 
-# ---------------------------------------------
-# СЕТИ И ТОМА
-# ---------------------------------------------
-networks:
-  chat-net:
-    driver: bridge
-
 volumes:
   postgres_data:
-  kafka_data:     # volume для кафки, чтобы сообщения не пропадали при перезагрузке
-  npm-data:
-  npm-letsencrypt:

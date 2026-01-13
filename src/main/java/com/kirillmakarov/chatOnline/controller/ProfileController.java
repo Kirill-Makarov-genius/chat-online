@@ -42,8 +42,8 @@ public class ProfileController {
         userService.saveUserProfileSettings(userDto, file, curUsername);
         return "redirect:/profile";
     }
-// Make url without users
-    @GetMapping("/{username}")
+
+    @GetMapping("/users/{username}")
     public String viewUserProfile(@PathVariable String username,
                                   Model model,
                                   Principal principal){
