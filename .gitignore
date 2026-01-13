@@ -5,6 +5,7 @@ target/
 !**/src/test/**/target/
 /uploads/
 docker-compose.override.yml
+npm-data/
 
 ### STS ###
 .apt_generated
