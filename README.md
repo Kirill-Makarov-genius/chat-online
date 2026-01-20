@@ -1,7 +1,7 @@
 
 # 🎬 Chat Online & Watch Together
 
-![Java](https://img.shields.io/badge/Java-17-orange)
+![Java](https://img.shields.io/badge/Java-21-orange)
 ![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.0-green)
 ![Docker](https://img.shields.io/badge/Docker-Compose-blue)
 ![Kafka](https://img.shields.io/badge/Apache%20Kafka-Enabled-red)
