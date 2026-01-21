@@ -136,10 +136,70 @@ input[type="file"]::file-selector-button:hover {
 
 
 
+/* Transparent Glass Button */
+.btn-glass {
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text-main);
+    border: 1px solid var(--glass-border);
+    border-radius: 12px;
+    padding: 12px 24px;
+    font-weight: 600;
+    transition: all 0.2s ease;
+    backdrop-filter: blur(4px);
+}
+
+.btn-glass:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: var(--text-secondary);
+    color: #fff;
+    transform: translateY(-2px);
+}
+
+
 /* --- UTILS --- */
 .page-scrollable {
     height: 100dvh;
     overflow-y: auto;
     width: 100%;
     padding-bottom: 80px; /* Extra padding for bottom mobile bars */
+}
+
+/* ... existing styles ... */
+
+/* --- INPUTS --- */
+.input-group-custom {
+    background: #0c0a09;
+    border: 1px solid var(--glass-border);
+    border-radius: 16px;
+    padding: 8px 16px;
+    display: flex;
+    align-items: center;
+}
+
+.chat-input, .form-control-dark {
+    background: transparent !important;
+    border: none !important;
+    color: var(--text-main) !important;
+    font-size: 16px !important;
+    box-shadow: none !important;
+}
+
+.form-control-dark {
+    background: rgba(0, 0, 0, 0.2) !important;
+    border: 1px solid var(--glass-border) !important;
+    border-radius: 12px !important;
+    padding: 14px;
+}
+
+/* --- UPDATED PLACEHOLDER STYLES --- */
+.chat-input::placeholder,
+.form-control-dark::placeholder {
+    color: #d6d3d1 !important; /* Stone-300 (Much Lighter) */
+    opacity: 0.6;              /* Make it visible but distinct from typed text */
+    font-weight: 400;
+}
+
+.chat-input:focus::placeholder,
+.form-control-dark:focus::placeholder {
+    opacity: 0.4; /* Fade out slightly when typing */
 }

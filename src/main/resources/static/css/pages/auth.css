@@ -1,0 +1,81 @@
+
+
+/* Center the card vertically and horizontally */
+body {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100dvh;
+    padding: 20px;
+    background: radial-gradient(circle at top right, #292524, var(--bg-body));
+}
+
+.auth-card {
+    width: 100%;
+    max-width: 420px;
+    padding: 2.5rem;
+    box-shadow: 0 30px 60px rgba(0, 0, 0, 0.5);
+    animation: fadeInUp 0.6s ease-out;
+}
+
+/* Brand Styling */
+.brand-icon {
+    font-size: 3rem;
+    background: linear-gradient(135deg, var(--accent), #f59e0b);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    filter: drop-shadow(0 4px 10px var(--accent-glow));
+}
+
+/* Custom Tabs for Dark Theme */
+.nav-tabs {
+    border: none;
+    background: rgba(0, 0, 0, 0.3);
+    padding: 6px;
+    border-radius: 14px;
+    margin-bottom: 2rem;
+    border: 1px solid var(--glass-border);
+}
+
+.nav-link {
+    border: none !important;
+    color: var(--text-muted) !important;
+    border-radius: 10px !important;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    text-align: center;
+    padding: 10px;
+}
+
+.nav-link:hover {
+    color: var(--text-main) !important;
+}
+
+.nav-link.active {
+    background-color: var(--accent) !important;
+    color: #fff !important;
+    box-shadow: 0 4px 12px var(--accent-glow);
+}
+
+/* Form Tweaks */
+.form-label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin-bottom: 0.5rem;
+    margin-left: 4px;
+}
+
+.error-text {
+    font-size: 0.75rem;
+    color: #f87171;
+    margin-top: 5px;
+    margin-left: 4px;
+    display: block;
+}
+
+/* Animation */
+@keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}

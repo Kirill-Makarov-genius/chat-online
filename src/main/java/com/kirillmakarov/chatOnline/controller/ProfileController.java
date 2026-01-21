@@ -31,7 +31,7 @@ public class ProfileController {
     }
 
     @PostMapping("/update")
-    public String updateUserProfile(@Valid @ModelAttribute UserDto userDto,
+    public String updateUserProfile(@Valid @ModelAttribute("user") UserDto user,
                                     BindingResult bindingResult,
                                     @RequestParam(value="profileImage", required = false) MultipartFile file,
                                     Principal principal){
@@ -39,7 +39,7 @@ public class ProfileController {
             return "user-settings";
         }
         String curUsername = principal.getName();
-        userService.saveUserProfileSettings(userDto, file, curUsername);
+        userService.saveUserProfileSettings(user, file, curUsername);
         return "redirect:/profile";
     }
 

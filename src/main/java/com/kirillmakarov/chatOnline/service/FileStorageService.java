@@ -23,7 +23,7 @@ public class FileStorageService {
     private final long MAX_FILE_SIZE;
     public FileStorageService(@Value("${file.upload-dir}") String uploadDir){
         this.fileStorageLocation = Paths.get(uploadDir).toAbsolutePath().normalize();
-        this.MAX_FILE_SIZE = 10L * 1024 * 1024;
+        this.MAX_FILE_SIZE = 100L * 1024 * 1024;
         try{
             Files.createDirectories(this.fileStorageLocation);
         } catch (IOException ex) {

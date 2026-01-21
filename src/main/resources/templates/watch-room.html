@@ -90,7 +90,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.1.4/sockjs.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
 
-<head th:replace="~{fragments/head :: common-head('Watch Room', '/css/pages/video.css')}"></head>
+<div th:replace="~{fragments/notifications :: global-notifications}"></div>
 
 <script th:inline="javascript">
 
@@ -121,16 +121,19 @@
         });
     });
 
-    // --- Use Global Socket Connection ---
-    connectGlobalSocket(function(client) {
-        // This callback runs AFTER connection is established
-        console.log("📺 Subscribing to Video Room...");
 
-        client.subscribe('/topic/video/' + roomId, (message) => {
-            const signal = JSON.parse(message.body);
-            if (signal.sender !== currentUser) {
-                handleRemoteSignal(signal);
-            }
+    document.addEventListener("DOMContentLoaded", function() {
+        // --- Use Global Socket Connection ---
+        connectGlobalSocket(function(client) {
+            // This callback runs AFTER connection is established
+            console.log("📺 Subscribing to Video Room...");
+
+            client.subscribe('/topic/video/' + roomId, (message) => {
+                const signal = JSON.parse(message.body);
+                if (signal.sender !== currentUser) {
+                    handleRemoteSignal(signal);
+                }
+            });
         });
     });
 
