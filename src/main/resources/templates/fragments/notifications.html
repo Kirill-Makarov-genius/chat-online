@@ -4,89 +4,28 @@
 
 <div th:fragment="global-notifications">
 
-    <!-- 1. THE TOAST HTML UI (Hidden by default)      -->
+    <!-- 1. TOAST UI (Скрыт по умолчанию) -->
     <div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 1055;">
-        <div id="liveToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
-            <div class="toast-header">
-                <i class="bi bi-chat-dots-fill text-primary me-2"></i>
-                <strong class="me-auto">New Message</strong>
-                <small class="text-muted">Just now</small>
-                <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
-            </div>
-            <div class="toast-body">
-                <!-- The link wraps the message so you can click it -->
-                <a id="global-toast-link" href="#" class="text-decoration-none text-dark">
-                    <span id="global-toast-body" class="fw-normal">Message content...</span>
-                </a>
+        <div id="liveToast" class="toast align-items-center text-white bg-dark border-secondary" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="d-flex">
+                <div class="toast-body">
+                    <i class="bi bi-chat-dots-fill text-info me-2"></i>
+                    <a id="global-toast-link" href="#" class="text-decoration-none text-white">
+                        <strong id="global-toast-body" class="fw-normal">New Message...</strong>
+                    </a>
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
             </div>
         </div>
     </div>
 
-
+    <!-- 2. LIBRARIES (SockJS + Stomp) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.1.4/sockjs.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
 
+    <!-- 3. OUR GLOBAL LOGIC -->
+    <script src="/js/global-socket.js"></script>
 
-    <script th:inline="javascript">
-        var globalStompClient = null;
-
-        document.addEventListener("DOMContentLoaded", function() {
-            connectGlobalNotifications();
-        });
-
-        function connectGlobalNotifications() {
-            var socket = new SockJS('/ws');
-            globalStompClient = Stomp.over(socket);
-            globalStompClient.debug = null;
-
-            globalStompClient.connect({}, function (frame) {
-                console.log('Global Notifications Connected');
-
-                // Subscribe to user specific queue
-                globalStompClient.subscribe('/user/queue/notifications', function (result) {
-                    var notification = JSON.parse(result.body);
-                    showGlobalToast(notification);
-                    updateGlobalBadge();
-                });
-            }, function(error) {
-                console.log("STOMP error " + error);
-            });
-        }
-
-        function showGlobalToast(notification) {
-            // 1. Set Content
-            var bodyEl = document.getElementById('global-toast-body');
-            var linkEl = document.getElementById('global-toast-link');
-
-            if(bodyEl) {
-                // Adjust this based on your DTO fields (e.g. notification.message or notification.content)
-                var msgText = notification.message ? notification.message : "Sent a message";
-                bodyEl.innerText = notification.senderUsername + ": " + msgText;
-            }
-
-            // 2. Set Link
-            if(linkEl && notification.conversationId) {
-                linkEl.href = "/chats/" + notification.conversationId;
-            }
-
-            // 3. Show Bootstrap Toast
-            var toastEl = document.getElementById('liveToast');
-            if(toastEl) {
-                var toast = new bootstrap.Toast(toastEl);
-                toast.show();
-            }
-        }
-
-        function updateGlobalBadge() {
-            // This only works if your page has the navbar with this ID
-            var badge = document.getElementById("nav-notification-badge");
-            if (badge) {
-                var currentCount = parseInt(badge.innerText) || 0;
-                badge.innerText = currentCount + 1;
-                badge.style.display = 'inline-block';
-            }
-        }
-    </script>
 </div>
 
 </body>

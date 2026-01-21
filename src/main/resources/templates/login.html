@@ -1,222 +1,124 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Connect | Chat Online</title>
 
-    <!-- Modern UI Dependencies -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+<!-- 1. Include Head Fragment + Auth CSS -->
+<head th:replace="~{fragments/head :: common-head('Connect | Chat Online', '/css/pages/auth.css')}"></head>
 
-    <style>
-        :root {
-            --bg-body: #080c14;
-            --glass-bg: rgba(255, 255, 255, 0.03);
-            --glass-border: rgba(255, 255, 255, 0.08);
-            --accent: #38bdf8;
-            --accent-glow: rgba(56, 189, 248, 0.3);
-        }
-
-        body {
-            background: radial-gradient(circle at center, #1e293b, var(--bg-body));
-            background-attachment: fixed;
-            color: #f1f5f9;
-            font-family: 'Inter', sans-serif;
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-        }
-
-        .auth-card {
-            background: var(--glass-bg);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border: 1px solid var(--glass-border);
-            border-radius: 28px;
-            width: 100%;
-            max-width: 450px;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-            overflow: hidden;
-        }
-
-        /* Tabs Styling */
-        .nav-tabs {
-            border: none;
-            background: rgba(0,0,0,0.2);
-            padding: 5px;
-            border-radius: 15px;
-            margin-bottom: 30px;
-        }
-        .nav-link {
-            border: none !important;
-            color: #94a3b8 !important;
-            border-radius: 12px !important;
-            font-weight: 600;
-            transition: 0.3s;
-            flex: 1;
-        }
-        .nav-link.active {
-            background: var(--accent) !important;
-            color: #000 !important;
-            box-shadow: 0 4px 15px var(--accent-glow);
-        }
-
-        /* Input Styling */
-        .form-control {
-            background: rgba(0, 0, 0, 0.3);
-            border: 1px solid var(--glass-border);
-            color: #fff;
-            border-radius: 12px;
-            padding: 12px 16px;
-            transition: all 0.3s;
-        }
-        .form-control:focus {
-            background: rgba(0, 0, 0, 0.5);
-            border-color: var(--accent);
-            box-shadow: 0 0 12px var(--accent-glow);
-            color: #fff;
-        }
-        .error-span {
-            font-size: 0.75rem;
-            color: #fb7185;
-            margin-top: 4px;
-            display: block;
-        }
-
-        /* Buttons */
-        .btn-auth {
-            background: var(--accent);
-            color: #000;
-            font-weight: 700;
-            border-radius: 12px;
-            padding: 14px;
-            border: none;
-            width: 100%;
-            transition: 0.3s;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-        .btn-auth:hover {
-            background: #fff;
-            transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(0,0,0,0.4);
-        }
-
-        .google-btn {
-            background: rgba(255,255,255,0.05);
-            border: 1px solid var(--glass-border);
-            color: #fff;
-            text-decoration: none;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            padding: 12px;
-            border-radius: 12px;
-            font-weight: 600;
-            transition: 0.3s;
-        }
-        .google-btn:hover {
-            background: #fff;
-            color: #000;
-        }
-
-        .brand-logo {
-            font-size: 2.5rem;
-            color: var(--accent);
-            margin-bottom: 10px;
-        }
-    </style>
-</head>
 <body>
 
-<div class="auth-card p-4 p-md-5">
+<div class="auth-card glass-card">
+
+    <!-- Header / Logo -->
     <div class="text-center mb-4">
-        <div class="brand-logo"><i class="bi bi-chat-heart-fill"></i></div>
-        <h2 class="fw-bold mb-1">Chat Online</h2>
-        <p class=" small">Watch together, chat forever.</p>
+        <i class="bi bi-chat-square-quote-fill brand-icon mb-2 d-block"></i>
+        <h2 class="fw-bold text-white mb-1">Welcome Back</h2>
+        <p class="text-secondary small">Sign in to continue chatting</p>
     </div>
 
     <!-- Tab Switcher -->
-    <ul class="nav nav-tabs justify-content-center" id="authTabs" role="tablist">
+    <ul class="nav nav-tabs nav-fill" id="authTabs" role="tablist">
+
+        <!-- LOGIN TAB BUTTON -->
+        <!-- LOGIC: Active if DTO is null OR if 'registered' param is present -->
         <li class="nav-item" role="presentation">
-            <button class="nav-link w-100" th:classappend="${registrationFormDto == null ? 'active' : ''}"
-                    id="login-tab" data-bs-toggle="tab" data-bs-target="#login-pane" type="button">Login</button>
+            <button class="nav-link w-100"
+                    th:classappend="${(registrationFormDto == null || param.registered != null) ? 'active' : ''}"
+                    id="login-tab" data-bs-toggle="tab" data-bs-target="#login-pane" type="button">
+                Sign In
+            </button>
         </li>
+
+        <!-- REGISTER TAB BUTTON -->
+        <!-- LOGIC: Active only if DTO is NOT null AND 'registered' is NOT present -->
         <li class="nav-item" role="presentation">
-            <button class="nav-link w-100" th:classappend="${registrationFormDto != null ? 'active' : ''}"
-                    id="register-tab" data-bs-toggle="tab" data-bs-target="#register-pane" type="button">Register</button>
+            <button class="nav-link w-100"
+                    th:classappend="${(registrationFormDto != null && param.registered == null) ? 'active' : ''}"
+                    id="register-tab" data-bs-toggle="tab" data-bs-target="#register-pane" type="button">
+                Create Account
+            </button>
         </li>
     </ul>
 
     <div class="tab-content" id="authTabsContent">
 
-        <!-- LOGIN PANE -->
-        <div class="tab-pane fade" th:classappend="${registrationFormDto == null ? 'show active' : ''}" id="login-pane" role="tabpanel">
+        <!-- ================= LOGIN PANE ================= -->
+        <!-- LOGIC: Show if DTO is null OR if 'registered' param is present -->
+        <div class="tab-pane fade"
+             th:classappend="${(registrationFormDto == null || param.registered != null) ? 'show active' : ''}"
+             id="login-pane" role="tabpanel">
+
             <form th:action="@{/login}" method="post">
-                <div class="mb-3">
-                    <input type="text" name="username" class="form-control" placeholder="Username" required>
-                </div>
-                <div class="mb-4">
-                    <input type="password" name="password" class="form-control" placeholder="Password" required>
-                </div>
-                <button type="submit" class="btn-auth mb-3">Sign In</button>
 
-                <div th:if="${param.error}" class="alert bg-danger bg-opacity-10 text-danger border-0 small py-2 text-center">
-                    <i class="bi bi-exclamation-circle me-1"></i> Invalid credentials
+                <!-- SUCCESS ALERT (Appears when ?registered is in URL) -->
+                <div th:if="${param.registered}" class="alert alert-success bg-success bg-opacity-10 border-success border-opacity-25 text-success small py-3 mb-4 d-flex align-items-center rounded-3">
+                    <i class="bi bi-check-circle-fill me-3 fs-5"></i>
+                    <div>
+                        <strong>Success!</strong><br>
+                        Account created. Please log in.
+                    </div>
                 </div>
-                <div th:if="${param.logout}" class="alert bg-info bg-opacity-10 text-info border-0 small py-2 text-center">
-                    <i class="bi bi-info-circle me-1"></i> Logged out successfully
+
+                <!-- ERROR ALERT (Login failed) -->
+                <div th:if="${param.error}" class="alert alert-danger bg-danger bg-opacity-10 border-danger border-opacity-25 text-danger small py-2 mb-4 d-flex align-items-center rounded-3">
+                    <i class="bi bi-exclamation-circle-fill me-2"></i> Incorrect username or password
                 </div>
+
+                <!-- LOGOUT ALERT -->
+                <div th:if="${param.logout}" class="alert alert-info bg-info bg-opacity-10 border-info border-opacity-25 text-info small py-2 mb-4 rounded-3">
+                    <i class="bi bi-info-circle-fill me-2"></i> Logged out successfully
+                </div>
+
+                <div class="mb-3">
+                    <input type="text" name="username" class="form-control form-control-dark" placeholder="Username" required autofocus>
+                </div>
+
+                <div class="mb-4">
+                    <input type="password" name="password" class="form-control form-control-dark" placeholder="Password" required>
+                </div>
+
+                <button type="submit" class="btn btn-accent w-100 py-3 mb-3">
+                    Enter Chat <i class="bi bi-arrow-right-short fs-5 align-middle"></i>
+                </button>
             </form>
         </div>
 
-        <!-- REGISTER PANE -->
-        <div class="tab-pane fade" th:classappend="${registrationFormDto != null ? 'show active' : ''}" id="register-pane" role="tabpanel">
+        <!-- ================= REGISTER PANE ================= -->
+        <!-- LOGIC: Show only if DTO is NOT null AND 'registered' is NOT present -->
+        <div class="tab-pane fade"
+             th:classappend="${(registrationFormDto != null && param.registered == null) ? 'show active' : ''}"
+             id="register-pane" role="tabpanel">
+
             <form th:action="@{/register}" method="post" th:object="${registrationFormDto}">
-                <div class="mb-3">
-                    <input type="text" th:field="*{username}" class="form-control" placeholder="Choose Username">
-                    <span class="error-span" th:if="${#fields.hasErrors('username')}" th:errors="*{username}"></span>
-                </div>
-                <div class="mb-3">
-                    <input type="text" th:field="*{nickname}" class="form-control" placeholder="Display Nickname">
-                    <span class="error-span" th:if="${#fields.hasErrors('nickname')}" th:errors="*{nickname}"></span>
-                </div>
-                <div class="mb-4">
-                    <input type="password" th:field="*{password}" class="form-control" placeholder="Create Password">
-                    <span class="error-span" th:if="${#fields.hasErrors('password')}" th:errors="*{password}"></span>
-                </div>
-                <button type="submit" class="btn-auth" style="background: #10b981; color: #fff;">Join Community</button>
 
-                <div th:if="${param.registered}" class="alert bg-success bg-opacity-10 text-success border-0 small py-2 mt-3 text-center">
-                    Success! You can now log in.
+                <div class="mb-3">
+                    <input type="text" th:field="*{username}" class="form-control form-control-dark" placeholder="Choose Username">
+                    <span class="error-text" th:if="${#fields.hasErrors('username')}" th:errors="*{username}"></span>
                 </div>
+
+                <div class="mb-3">
+                    <input type="text" th:field="*{nickname}" class="form-control form-control-dark" placeholder="Display Name (Nickname)">
+                    <span class="error-text" th:if="${#fields.hasErrors('nickname')}" th:errors="*{nickname}"></span>
+                </div>
+
+                <div class="mb-4">
+                    <input type="password" th:field="*{password}" class="form-control form-control-dark" placeholder="Create Password">
+                    <span class="error-text" th:if="${#fields.hasErrors('password')}" th:errors="*{password}"></span>
+                </div>
+
+                <button type="submit" class="btn btn-accent w-100 py-3" style="filter: hue-rotate(90deg);">
+                    Join Community
+                </button>
             </form>
         </div>
     </div>
 
+    <!-- Footer text -->
     <div class="text-center mt-4">
-        <div class="d-flex align-items-center mb-4">
-            <hr class="flex-grow-1 border-secondary border-opacity-25">
-            <span class="px-3  small">Third Party Login</span>
-            <hr class="flex-grow-1 border-secondary border-opacity-25">
-        </div>
-
-        <a th:href="@{/oauth2/authorization/google}" class="google-btn">
-            <i class="bi bi-google"></i> Continue with Google
-        </a>
-        <p class="mt-4  x-small">
-            Connecting Google allows you to stream videos directly from your Drive.
-        </p>
+        <p class="text-muted small mb-0 opacity-50">&copy; 2026 Chat Online Inc.</p>
     </div>
+
 </div>
 
-<!-- Bootstrap Bundle JS -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
 </body>
 </html>

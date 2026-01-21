@@ -1,0 +1,47 @@
+:root {
+    /* --- COFFEE & GOLD PALETTE --- */
+    --bg-body: #1c1917;         /* Very Dark Warm Brown (Espresso) */
+    --sidebar-bg: #292524;      /* Dark Brown */
+
+    /* The Accent: Warm Gold/Amber */
+    --accent: #d97706;          /* Amber-600 */
+    --accent-hover: #b45309;    /* Amber-700 */
+    --accent-glow: rgba(217, 119, 6, 0.3);
+
+    /* Glass Effect (Warm Tint) */
+    --glass-bg: rgba(41, 37, 36, 0.7);
+    --glass-border: rgba(255, 255, 255, 0.08); /* Subtle border */
+
+    /* Messages */
+    --msg-sent: #78350f;        /* Deep Amber/Brown */
+    --msg-received: #44403c;    /* Warm Grey */
+
+    /* Typography (Cream/Off-White for warmth) */
+    --text-main: #ffffff;        /* Pure White for headings/inputs */
+    --text-secondary: #e7e5e4;   /* Stone-200: Much lighter grey for Labels */
+    --text-muted: #a8a29e;       /* Stone-400: Lighter grey for Placeholders/Hints */
+}
+
+/* --- GLOBAL RESET --- */
+html, body {
+    height: 100dvh; /* Mobile friendly height */
+    width: 100vw;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: hidden;
+    background-color: var(--bg-body);
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    color: var(--text-main);
+    /* Prevents pull-to-refresh on mobile */
+    overscroll-behavior: none;
+}
+
+.main-row {
+    height: 100dvh;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+/* Mobile Scrollbar hiding for cleaner look */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-thumb { background: #44403c; border-radius: 10px; }

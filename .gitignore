@@ -5,6 +5,7 @@ target/
 !**/src/test/**/target/
 /uploads/
 docker-compose.override.yml
+SECURITY_ISSUES_REPORT.md
 npm-data
 ### STS ###
 .apt_generated
@@ -14,6 +15,7 @@ npm-data
 .settings
 .springBeans
 .sts4-cache
+
 
 ### IntelliJ IDEA ###
 .idea

@@ -28,7 +28,6 @@ public class WatchRoomController {
     private final RoomService roomService;
     private final CustomUserDetailsService userService;
     private final GoogleDriveService googleDriveService;
-    private final VideoConversionService videoConversionService;
 
 
 

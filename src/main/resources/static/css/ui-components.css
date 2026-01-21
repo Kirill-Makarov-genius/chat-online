@@ -1,0 +1,205 @@
+/* --- GLASS CARDS (Smoky look) --- */
+.glass-card {
+    background: var(--glass-bg);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid var(--glass-border);
+    border-radius: 20px; /* Softer rounded corners */
+    color: var(--text-main);
+}
+
+.border-glass { border-color: var(--glass-border) !important; }
+.text-accent { color: var(--accent) !important; }
+
+/* --- BUTTONS (Mobile Friendly) --- */
+.btn-accent {
+    background: linear-gradient(135deg, var(--accent), #f59e0b);
+    color: #fff;
+    border: none;
+    border-radius: 12px; /* Modern shape */
+    font-weight: 600;
+    padding: 12px 20px; /* Larger touch area */
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 15px var(--accent-glow);
+}
+.btn-accent:active { transform: scale(0.98); }
+.btn-accent:hover {
+    background: var(--accent-hover);
+    color: #fff;
+    transform: translateY(-2px);
+}
+
+.btn-logout {
+    background: rgba(120, 53, 15, 0.2);
+    color: #f87171;
+    border: 1px solid rgba(248, 113, 113, 0.2);
+    border-radius: 10px;
+    height: 40px;
+    width: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* --- INPUTS (No Zoom on Mobile) --- */
+.input-group-custom {
+    background: #0c0a09; /* Almost black */
+    border: 1px solid var(--glass-border);
+    border-radius: 16px;
+    padding: 8px 16px; /* Comfortable padding */
+    display: flex;
+    align-items: center;
+}
+
+.chat-input, .form-control-dark {
+    background: transparent !important;
+    border: none !important;
+    color: var(--text-main) !important;
+    font-size: 16px !important; /* IMPORTANT: 16px prevents iOS zoom on focus */
+    box-shadow: none !important;
+}
+.chat-input::placeholder { color: var(--text-muted); }
+
+.form-control-dark {
+    background: rgba(0, 0, 0, 0.2) !important;
+    border: 1px solid var(--glass-border) !important;
+    border-radius: 12px !important;
+    padding: 14px;
+}
+
+/* --- SIDEBAR --- */
+.sidebar {
+    height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    background: var(--sidebar-bg);
+    border-right: 1px solid var(--glass-border);
+}
+.sidebar-header {
+    height: 80px; /* Taller header for mobile fingers */
+    padding: 0 20px;
+    border-bottom: 1px solid var(--glass-border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.conversation-item {
+    padding: 16px 20px; /* Taller items */
+    margin: 4px 8px;
+    border-radius: 16px;
+    color: var(--text-secondary);
+    text-decoration: none;
+    display: block;
+    border: 1px solid transparent;
+}
+.conversation-item:hover { background: rgba(255,255,255,0.03); }
+.conversation-item.active {
+    background: rgba(217, 119, 6, 0.15); /* Low opacity amber */
+    color: #fbbf24; /* Lighter amber text */
+    border: 1px solid rgba(217, 119, 6, 0.3);
+}
+
+.avatar-img {
+    width: 48px; height: 48px; /* Slightly larger avatars */
+    border-radius: 14px;
+    object-fit: cover;
+    border: 2px solid var(--glass-border);
+}
+
+/* --- FILE INPUT STYLING --- */
+input[type="file"] {
+    color: var(--text-secondary); /* Color of the filename text */
+    padding: 10px !important;     /* Adjust padding to fit the button */
+}
+
+/* The "Choose File" button inside the input */
+input[type="file"]::file-selector-button {
+    background-color: rgba(255, 255, 255, 0.08);
+    color: var(--text-main);
+    border: 1px solid var(--glass-border);
+    border-radius: 8px;
+    padding: 6px 16px;
+    margin-right: 16px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    font-family: inherit; /* Ensure it uses Inter */
+}
+
+/* Hover effect for the button */
+input[type="file"]::file-selector-button:hover {
+    background-color: var(--accent);
+    color: #fff;
+    border-color: var(--accent);
+}
+
+
+
+/* Transparent Glass Button */
+.btn-glass {
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text-main);
+    border: 1px solid var(--glass-border);
+    border-radius: 12px;
+    padding: 12px 24px;
+    font-weight: 600;
+    transition: all 0.2s ease;
+    backdrop-filter: blur(4px);
+}
+
+.btn-glass:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: var(--text-secondary);
+    color: #fff;
+    transform: translateY(-2px);
+}
+
+
+/* --- UTILS --- */
+.page-scrollable {
+    height: 100dvh;
+    overflow-y: auto;
+    width: 100%;
+    padding-bottom: 80px; /* Extra padding for bottom mobile bars */
+}
+
+/* ... existing styles ... */
+
+/* --- INPUTS --- */
+.input-group-custom {
+    background: #0c0a09;
+    border: 1px solid var(--glass-border);
+    border-radius: 16px;
+    padding: 8px 16px;
+    display: flex;
+    align-items: center;
+}
+
+.chat-input, .form-control-dark {
+    background: transparent !important;
+    border: none !important;
+    color: var(--text-main) !important;
+    font-size: 16px !important;
+    box-shadow: none !important;
+}
+
+.form-control-dark {
+    background: rgba(0, 0, 0, 0.2) !important;
+    border: 1px solid var(--glass-border) !important;
+    border-radius: 12px !important;
+    padding: 14px;
+}
+
+/* --- UPDATED PLACEHOLDER STYLES --- */
+.chat-input::placeholder,
+.form-control-dark::placeholder {
+    color: #d6d3d1 !important; /* Stone-300 (Much Lighter) */
+    opacity: 0.6;              /* Make it visible but distinct from typed text */
+    font-weight: 400;
+}
+
+.chat-input:focus::placeholder,
+.form-control-dark:focus::placeholder {
+    opacity: 0.4; /* Fade out slightly when typing */
+}

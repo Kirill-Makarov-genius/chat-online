@@ -1,90 +1,96 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
-<head th:replace="~{fragments/head :: common-head('My Rooms')}"></head>
+
+<!-- 1. Include Shared Head (CSS, Fonts, etc.) -->
+<head th:replace="~{fragments/head :: common-head('My Watch Rooms', '/css/pages/video.css')}"></head>
 
 <body>
-<div class="container py-5">
 
-    <!-- Page Header -->
-    <div class="d-flex justify-content-between align-items-end mb-5 border-bottom border-glass pb-4">
-        <div>
-            <a th:href="@{/chats}" class="text-accent text-decoration-none small fw-bold text-uppercase mb-2 d-block">
-                <i class="bi bi-chevron-left"></i> Back to Messenger
-            </a>
-            <h1 class="display-5 fw-bold mb-0">Watch Rooms</h1>
-            <p class="text-secondary mt-2 mb-0">Manage your active watch parties or join a friend.</p>
-        </div>
+<!-- Wrapper to allow scrolling (since body is fixed height in global css) -->
+<div class="page-scrollable">
+    <div class="container py-5">
 
-        <div class="d-flex gap-3">
-            <!-- Search/Join by ID Button -->
-            <button class="btn btn-outline-light rounded-pill px-4 border-glass" data-bs-toggle="modal" data-bs-target="#joinRoomModal">
-                <i class="bi bi-hash me-1"></i> Join by ID
-            </button>
-            <!-- Create Button -->
-            <a th:href="@{/watch/select-video}" class="btn btn-accent px-4 shadow-sm">
-                <i class="bi bi-plus-lg me-2"></i>Create Party
-            </a>
-        </div>
-    </div>
+        <!-- Page Header -->
+        <div class="d-flex justify-content-between align-items-end mb-5 border-bottom border-glass pb-4">
+            <div>
+                <a th:href="@{/chats}" class="text-accent text-decoration-none small fw-bold text-uppercase mb-2 d-block">
+                    <i class="bi bi-chevron-left"></i> Back to Messenger
+                </a>
+                <h1 class="display-5 fw-bold mb-0 text-white">Watch Rooms</h1>
+                <p class="text-secondary mt-2 mb-0">Manage your active watch parties or join a friend.</p>
+            </div>
 
-    <!-- Active Rooms Grid -->
-    <div class="row g-4">
-
-        <!-- Loop: User's Rooms -->
-        <div class="col-md-6 col-xl-4" th:each="room : ${listOfRooms}">
-            <div class="glass-card h-100 overflow-hidden border-glass">
-
-                <!-- Card Status Header -->
-                <div class="p-3 d-flex justify-content-between align-items-center" style="background: rgba(0,0,0,0.2);">
-                    <span class="badge badge-live px-3 py-1 rounded-pill small">
-                        <span class="spinner-grow spinner-grow-sm me-1" style="width: 0.5rem; height: 0.5rem;"></span> Live
-                    </span>
-
-                    <div class="dropdown">
-                        <button class="btn btn-link text-white p-0 opacity-50" data-bs-toggle="dropdown">
-                            <i class="bi bi-three-dots-vertical fs-5"></i>
-                        </button>
-                        <ul class="dropdown-menu dropdown-menu-dark shadow-lg border-glass">
-                            <li><a class="dropdown-item" href="#"><i class="bi bi-pencil me-2"></i>Edit Name</a></li>
-                            <li><hr class="dropdown-divider border-glass"></li>
-                            <li>
-                                <form th:action="@{/watch/delete}" method="post" onsubmit="return confirm('Delete this room?');">
-                                    <input type="hidden" name="roomId" th:value="${room.id}">
-                                    <button type="submit" class="dropdown-item text-danger">
-                                        <i class="bi bi-trash me-2"></i>Delete Room
-                                    </button>
-                                </form>
-                            </li>
-                        </ul>
-                    </div>
-                </div>
-
-                <div class="p-4">
-                    <h5 class="fw-bold mb-2 text-truncate" th:text="${room.name}">Movie Night</h5>
-                    <div class="d-flex align-items-center  small mb-4">
-                        <i class="bi bi-file-earmark-play-fill text-accent me-2"></i>
-                        <span class="text-truncate" th:text="${room.fileName}">video_file.mp4</span>
-                    </div>
-
-                    <div class="d-flex align-items-center justify-content-between pt-3 border-top border-glass">
-                        <div class="small text-secondary">
-                            ID: <span class="text-accent fw-bold" th:text="${room.id}">86631dd2</span>
-                        </div>
-                        <a th:href="@{/watch/room/{id}(id=${room.id})}" class="btn btn-accent btn-sm px-4">
-                            Enter <i class="bi bi-arrow-right ms-1"></i>
-                        </a>
-                    </div>
-                </div>
+            <div class="d-flex gap-3">
+                <!-- Join by ID Button -->
+                <button class="btn btn-outline-light rounded-pill px-4 border-glass" data-bs-toggle="modal" data-bs-target="#joinRoomModal">
+                    <i class="bi bi-hash me-1"></i> Join by ID
+                </button>
+                <!-- Create Button -->
+                <a th:href="@{/watch/select-video}" class="btn btn-accent px-4 shadow-sm">
+                    <i class="bi bi-plus-lg me-2"></i>Create Party
+                </a>
             </div>
         </div>
 
-        <!-- EMPTY STATE -->
-        <div th:if="${#lists.isEmpty(listOfRooms)}" class="col-12 text-center py-5">
-            <div class="glass-card d-inline-block p-5 text-center">
-                <i class="bi bi-collection-play display-1  opacity-25 mb-4 d-block"></i>
-                <h3 class="fw-bold">No Rooms Found</h3>
-                <p class="text-secondary">You haven't created any watch rooms yet.</p>
-                <a th:href="@{/watch/select-video}" class="btn btn-accent px-5 mt-3">Start Your First Party</a>
+        <!-- Active Rooms Grid -->
+        <div class="row g-4">
+
+            <!-- Loop: User's Rooms -->
+            <div class="col-md-6 col-xl-4" th:each="room : ${listOfRooms}">
+                <div class="glass-card h-100 overflow-hidden">
+
+                    <!-- Card Status Header -->
+                    <div class="p-3 d-flex justify-content-between align-items-center" style="background: rgba(0,0,0,0.2);">
+                        <span class="badge badge-live px-3 py-1 rounded-pill small">
+                            <span class="spinner-grow spinner-grow-sm me-1" style="width: 0.5rem; height: 0.5rem;"></span> Live
+                        </span>
+
+                        <div class="dropdown">
+                            <button class="btn btn-link text-white p-0 opacity-50" data-bs-toggle="dropdown">
+                                <i class="bi bi-three-dots-vertical fs-5"></i>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-dark shadow-lg border-glass">
+                                <li><a class="dropdown-item" href="#"><i class="bi bi-pencil me-2"></i>Edit Name</a></li>
+                                <li><hr class="dropdown-divider border-glass"></li>
+                                <li>
+                                    <form th:action="@{/watch/delete}" method="post" onsubmit="return confirm('Delete this room?');">
+                                        <input type="hidden" name="roomId" th:value="${room.id}">
+                                        <button type="submit" class="dropdown-item text-danger">
+                                            <i class="bi bi-trash me-2"></i>Delete Room
+                                        </button>
+                                    </form>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="p-4">
+                        <h5 class="fw-bold mb-2 text-white text-truncate" th:text="${room.name}">Room Name</h5>
+                        <div class="d-flex align-items-center text-muted small mb-4">
+                            <i class="bi bi-file-earmark-play-fill text-accent me-2"></i>
+                            <span class="text-truncate" th:text="${room.fileName}">video.mp4</span>
+                        </div>
+
+                        <div class="d-flex align-items-center justify-content-between pt-3 border-top border-glass">
+                            <div class="small text-secondary">
+                                ID: <span class="text-accent fw-bold" th:text="${room.id}">1234</span>
+                            </div>
+                            <a th:href="@{/watch/room/{id}(id=${room.id})}" class="btn btn-accent btn-sm px-4">
+                                Enter <i class="bi bi-arrow-right ms-1"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- EMPTY STATE -->
+            <div th:if="${#lists.isEmpty(listOfRooms)}" class="col-12 text-center py-5">
+                <div class="glass-card d-inline-block p-5 text-center">
+                    <i class="bi bi-collection-play display-1 text-secondary opacity-25 mb-4 d-block"></i>
+                    <h3 class="fw-bold text-white">No Rooms Found</h3>
+                    <p class="text-secondary">You haven't created any watch rooms yet.</p>
+                    <a th:href="@{/watch/select-video}" class="btn btn-accent px-5 mt-3">Start Your First Party</a>
+                </div>
             </div>
         </div>
     </div>
@@ -93,32 +99,36 @@
 <!-- Modal: Join by ID -->
 <div class="modal fade" id="joinRoomModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content glass-card border-glass p-3">
+        <div class="modal-content glass-card p-3">
             <div class="modal-header border-0">
-                <h5 class="modal-title fw-bold">Join a Room</h5>
+                <h5 class="modal-title fw-bold text-white">Join a Room</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
                 <form id="joinRoomForm">
                     <p class="text-secondary small">Enter the 8-character ID provided by your friend.</p>
-                    <input type="text" id="roomIdInput" name="roomId" class="form-control mb-4" placeholder="e.g. 86631dd2" required>
+                    <input type="text" id="roomIdInput" name="roomId" class="form-control bg-dark text-white border-secondary mb-4" placeholder="e.g. 86631dd2" required>
                     <button type="submit" class="btn btn-accent w-100 py-3">Connect to Room</button>
                 </form>
             </div>
         </div>
     </div>
 </div>
-<script>
 
+
+<!-- 3. Join Logic Script -->
+<script>
     document.getElementById('joinRoomForm').addEventListener('submit', function(e){
         e.preventDefault();
         const roomId = document.getElementById('roomIdInput').value.trim();
         if (roomId){
             window.location.href = '/watch/room/' + roomId;
         }
-
     });
 </script>
+
+<!-- 4. Global Notifications (Toasts/Sockets) -->
 <div th:replace="~{fragments/notifications :: global-notifications}"></div>
+
 </body>
 </html>

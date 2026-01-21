@@ -28,7 +28,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         OAuth2User googleUser = super.loadUser(userRequest);
         String googleId = googleUser.getAttribute("sub");
 
-        // Get current DB user from Security Context
+        // Get current user from Security Context
         Authentication currentAuth = SecurityContextHolder.getContext().getAuthentication();
 
         if (currentAuth != null && currentAuth.isAuthenticated()){

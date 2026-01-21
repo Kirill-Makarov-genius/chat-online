@@ -1,0 +1,40 @@
+.profile-header {
+    /* Gold to Brown Gradient */
+    background: linear-gradient(135deg, #b45309 0%, #78350f 100%);
+    height: 160px;
+    border-top-left-radius: 20px;
+    border-top-right-radius: 20px;
+    position: relative;
+}
+
+/* Decorative texture overlay */
+.profile-header::after {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-image: radial-gradient(circle, rgba(255,255,255,0.1) 1px, transparent 1px);
+    background-size: 20px 20px;
+    opacity: 0.3;
+}
+
+.profile-img-container {
+    margin-top: -80px;
+    position: relative;
+    z-index: 2;
+}
+
+.profile-avatar {
+    width: 160px;
+    height: 160px;
+    object-fit: cover;
+    background-color: var(--sidebar-bg);
+    border: 6px solid var(--bg-body); /* Creates a "cutout" effect */
+    box-shadow: 0 15px 35px rgba(0,0,0,0.6);
+}
+
+.badge-status {
+    background: rgba(251, 191, 36, 0.1); /* Amber tint */
+    color: #fbbf24;
+    border: 1px solid rgba(251, 191, 36, 0.3);
+    padding: 8px 16px;
+}

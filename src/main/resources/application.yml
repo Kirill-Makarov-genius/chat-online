@@ -18,9 +18,9 @@ spring:
   config:
     import: optional:file:.env[.properties]
   datasource:
-    url: ${DB_URL}
-    username: ${DB_USER}
-    password: ${DB_PASSWORD}
+    url: jdbc:postgresql://localhost:5432/chat-online-db
+    username: postgres
+    password: new_password
   liquibase:
     enabled: true
     change-log: classpath:db/changelog/db.changelog-master.xml
@@ -62,6 +62,4 @@ file:
 server:
   compression:
     enabled: false
-app:
-  storage:
-    video-temp: ${VIDEO_STORAGE_PATH:E:/movies/movies-together}
+
