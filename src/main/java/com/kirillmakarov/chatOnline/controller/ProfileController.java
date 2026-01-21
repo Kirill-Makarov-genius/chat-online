@@ -26,7 +26,7 @@ public class ProfileController {
     @GetMapping
     public String showUserSettingsProfile(Model model, Principal principal){
         UserDto curUser = userService.getUserProfile(principal.getName());
-        model.addAttribute("userDto", curUser);
+        model.addAttribute("user", curUser);
         return "user-settings";
     }
 

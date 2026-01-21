@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<div th:fragment="sidebar-panel" class="col-md-4 col-lg-3 sidebar">
+    <div class="sidebar-header">
+        <a href="/" class="text-decoration-none"><h5 class="mb-0 fw-bold text-white">Chats</h5></a>
+        <div class="d-flex align-items-center gap-2">
+            <!-- Notification Dropdown -->
+            <div class="dropdown">
+                <button class="btn btn-dark btn-sm rounded-3 border-secondary" type="button" data-bs-toggle="dropdown">
+                    <i class="bi bi-bell text-info"></i>
+                    <span id="notificationBadge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="display: none; font-size: 0.6rem;">0</span>
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end shadow bg-dark border-secondary" id="notificationList" style="width: 280px;">
+                    <li><h6 class="dropdown-header text-muted">Notifications</h6></li>
+                    <li id="no-notif-msg" class="text-center p-3 text-muted small">No new messages</li>
+                </ul>
+            </div>
+            
+            <a href="/profile" class="btn btn-dark btn-sm rounded-3 border-secondary"><i class="bi bi-gear"></i></a>
+            
+            <a href="/watch/manage" class="btn btn-dark btn-sm rounded-3 border-secondary" title="My Watch Rooms">
+                <i class="bi bi-collection-play text-warning"></i>
+            </a>
+            
+            <form th:action="@{/logout}" method="post" class="m-0">
+                <button type="submit" class="btn btn-logout btn-sm rounded-3"><i class="bi bi-box-arrow-right"></i></button>
+            </form>
+        </div>
+    </div>
+
+    <div class="p-3">
+        <form action="/chats/open" method="post" class="input-group-custom">
+            <i class="bi bi-search text-info me-2"></i>
+            <input type="text" name="targetUsername" class="form-control chat-input" placeholder="Search friends..." required>
+        </form>
+    </div>
+
+    <div class="chat-list">
+        <a th:each="chat : ${conversations}" th:href="@{/chats/{id}(id=${chat.id})}" th:attr="data-conversation-id=${chat.id}" class="conversation-item" th:classappend="${chat.active} ? 'active' : ''">
+            <div class="d-flex align-items-center">
+                <img th:src="${chat.conversationPicture}" class="avatar-img me-3">
+                <div class="overflow-hidden w-100">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <span class="fw-bold text-truncate text-white" th:text="${chat.conversationName}">Name</span>
+                        <small class="text-info" style="font-size: 0.5rem;">●</small>
+                    </div>
+                    <small class="text-truncate d-block" style="color: var(--text-muted)" th:text="${chat.lastMessage}">Message preview...</small>
+                </div>
+            </div>
+        </a>
+    </div>
+</div>
+
+</body>
+</html>

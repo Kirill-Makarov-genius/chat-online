@@ -29,7 +29,7 @@ services:
     restart: always
     environment:
       POSTGRES_DB: chat-online-db
-      POSTGRES_USER: postgres
+      POSTGRES_USER: ${DB_USER}
       # Uses password from .env or defaults to "password"
       POSTGRES_PASSWORD: ${DB_PASSWORD:-password}
     # Open port only if you need external access (e.g. DBeaver)
@@ -106,7 +106,7 @@ services:
       SERVER_PORT: 8080
       VIDEO_STORAGE_PATH: /app/uploads
       DB_URL: jdbc:postgresql://db:5432/chat-online-db
-      DB_USER: postgres
+      DB_USER: ${DB_USER}
       DB_PASSWORD: ${DB_PASSWORD:-password}
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       MAIL_HOST: ${MAIL_HOST}
@@ -128,3 +128,4 @@ volumes:
   kafka_data:
   npm-data:
   npm-letsencrypt:
+

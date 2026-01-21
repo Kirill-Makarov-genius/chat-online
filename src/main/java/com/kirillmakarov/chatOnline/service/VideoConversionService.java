@@ -19,14 +19,14 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-@Service
+//@Service
 @RequiredArgsConstructor
 public class VideoConversionService {
 
     private final RoomRepository roomRepository;
     private final SimpMessagingTemplate messagingTemplate;
 
-    @Value("${app.storage.video-temp}")
+//    @Value("${app.storage.video-temp}")
     private String storagePath;
 
     @Async

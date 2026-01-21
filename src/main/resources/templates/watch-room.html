@@ -1,44 +1,12 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 
-<head th:replace="~{fragments/head :: common-head(${room.name})}"></head>
+<!-- 1. Include Head Fragment (Imports Bootstrap, Fonts, and style.css) -->
+<head th:replace="~{fragments/head :: common-head('Watch Room', '/css/pages/video.css')}"></head>
 
-<style>
-    /* Aspect Ratio for Player */
-    .video-wrapper {
-        background: #000;
-        border-radius: 16px;
-        overflow: hidden;
-        border: 1px solid var(--glass-border);
-        box-shadow: 0 20px 50px rgba(0,0,0,0.6);
-    }
 
-    .video-js {
-        width: 100% !important;
-        height: auto;
-        aspect-ratio: 16 / 9;
-    }
-
-    /* Sidebar Participant List */
-    .participant-list {
-        max-height: 300px;
-        overflow-y: auto;
-    }
-
-    /* THEATER MODE: Mobile Landscape Logic */
-    @media (orientation: landscape) and (max-height: 500px) {
-        .header-main-card, .sidebar-section, .sync-info-card { display: none !important; }
-        .video-column { margin-bottom: 0 !important; width: 100% !important; }
-        .video-wrapper { border-radius: 0; border: none; }
-        .container-fluid { padding: 0 !important; }
-    }
-
-    /* Mobile Portrait Tweaks */
-    @media (max-width: 768px) {
-        .header-main-card h4 { font-size: 1.1rem; }
-        .copy-box { font-size: 0.8rem; padding: 6px 12px; }
-    }
-</style>
+<!-- Additional Video.js CSS -->
+<link href="https://vjs.zencdn.net/8.10.0/video-js.css" rel="stylesheet" />
 
 <body>
 
@@ -52,7 +20,7 @@
             </a>
             <div class="text-truncate" style="max-width: 180px; @media(min-width: 768px){max-width: 500px;}">
                 <h4 class="mb-0 fw-bold text-truncate" th:text="${room.name}">Room Name</h4>
-                <p class="mb-0 small  text-truncate">
+                <p class="mb-0 small text-truncate">
                     <i class="bi bi-file-earmark-play me-1"></i>
                     <span th:text="${room.fileName}">video.mp4</span>
                 </p>
@@ -73,7 +41,6 @@
         <!-- PLAYER COLUMN -->
         <div class="col-12 col-lg-8 col-xl-9 video-column">
             <div class="video-wrapper shadow-lg">
-                <!-- Video.js Player -->
                 <video id="mainPlayer" class="video-js vjs-default-skin vjs-big-play-centered w-100"
                        controls preload="auto">
                     <source th:src="@{/api/video/{id}(id=${room.fileId})}" type="video/mp4">
@@ -84,10 +51,10 @@
             <div class="mt-3 mt-md-4 p-3 p-md-4 glass-card d-flex justify-content-between align-items-center sync-info-card">
                 <div>
                     <h6 class="mb-1 fw-bold text-accent">Synchronized Playback</h6>
-                    <p class="mb-0  small d-none d-md-block">Your actions are broadcasted to all participants via WebSockets.</p>
+                    <p class="mb-0 small d-none d-md-block">Your actions are broadcasted to all participants via WebSockets.</p>
                 </div>
                 <div class="text-end">
-                    <p class="mb-0 small ">Host</p>
+                    <p class="mb-0 small">Host</p>
                     <p class="mb-0 fw-bold" th:text="${room.creatorName}">Host Name</p>
                 </div>
             </div>
@@ -97,23 +64,18 @@
         <div class="col-12 col-lg-4 col-xl-3 sidebar-section">
             <div class="glass-card p-4 h-100">
                 <h6 class="text-uppercase small fw-bold text-accent mb-4" style="letter-spacing: 1px;">Participants</h6>
-
                 <div class="participant-list mb-4">
                     <div class="d-flex align-items-center mb-3">
                         <div class="rounded-circle bg-success me-3" style="width: 10px; height: 10px; box-shadow: 0 0 10px #10b981;"></div>
                         <div>
                             <span class="fw-bold d-block" th:text="${room.creatorName}">User</span>
-                            <small class="">Currently Watching</small>
+                            <small>Currently Watching</small>
                         </div>
                     </div>
-                    <!-- Future dynamic participants go here -->
                 </div>
-
                 <hr class="border-glass my-4">
-
                 <h6 class="text-uppercase small fw-bold text-accent mb-3" style="letter-spacing: 1px;">Invite Friends</h6>
-                <p class="small  mb-4">Anyone with the Room ID can join your session instantly.</p>
-
+                <p class="small mb-4">Anyone with the Room ID can join your session instantly.</p>
                 <button class="btn-accent w-100 py-3" onclick="copyRoomId()">
                     Copy Link ID <i class="bi bi-link-45deg ms-1"></i>
                 </button>
@@ -122,18 +84,18 @@
     </div>
 </div>
 
-<!-- Load External Video.js Assets -->
-<link href="https://vjs.zencdn.net/8.10.0/video-js.css" rel="stylesheet" />
+<!-- 2. SCRIPTS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://vjs.zencdn.net/8.10.0/video.min.js"></script>
-
 <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.1.4/sockjs.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
-<!-- WebSocket & Logic -->
+
+<head th:replace="~{fragments/head :: common-head('Watch Room', '/css/pages/video.css')}"></head>
+
 <script th:inline="javascript">
-    /* =========================================
-       1. ИНИЦИАЛИЗАЦИЯ ПЕРЕМЕННЫХ
-       ========================================= */
-    const roomId = [[${room.id}]];
+
+    const manualConnection = true;
+    const roomId = [[${room.id}]]
     const fileId = [[${room.fileId}]];
     const currentUser = [[${#authentication.name}]];
     const initialState = {
@@ -141,146 +103,73 @@
         isPlaying: [[${room.isPlaying}]]
     };
 
-    // Флаг: если true, значит мы обрабатываем сигнал от другого юзера
-    // и не должны отправлять его обратно.
     let isRemoteAction = false;
 
-    /* =========================================
-       2. НАСТРОЙКА ПЛЕЕРА VIDEO.JS
-       ========================================= */
+    // --- Video.js Setup ---
     const player = videojs('mainPlayer', {
         fluid: true,
         responsive: true,
         playbackRates: [0.5, 1, 1.5, 2]
     });
 
-    // Установка начального состояния при загрузке
     player.ready(() => {
         player.one('loadedmetadata', () => {
-            if (initialState.time > 0) {
-                player.currentTime(initialState.time);
-            }
+            if (initialState.time > 0) player.currentTime(initialState.time);
             if (initialState.isPlaying) {
-                var promise = player.play();
-                if (promise !== undefined) {
-                    promise.catch(error => {
-                        console.warn("Autoplay blocked by browser. User must interact first.");
-                        // Здесь можно показать кнопку "Click to Start" если нужно
-                    });
-                }
+                player.play().catch(e => console.warn("Autoplay blocked. User interaction needed."));
             }
         });
     });
 
-    /* =========================================
-       3. WEBSOCKET ПОДКЛЮЧЕНИЕ
-       ========================================= */
-    const socket = new SockJS('/ws');
-    const stompClient = Stomp.over(socket);
+    // --- Use Global Socket Connection ---
+    connectGlobalSocket(function(client) {
+        // This callback runs AFTER connection is established
+        console.log("📺 Subscribing to Video Room...");
 
-    // ВКЛЮЧАЕМ ЛОГИ (чтобы видеть отправку в консоли)
-    stompClient.debug = function(str) {
-        console.log(str);
-    };
-
-    stompClient.connect({}, () => {
-        console.log("✅ WebSocket Connected!");
-
-        // Подписка на канал комнаты
-        stompClient.subscribe('/topic/video/' + roomId, (message) => {
+        client.subscribe('/topic/video/' + roomId, (message) => {
             const signal = JSON.parse(message.body);
-
-            // Логируем входящее сообщение
-            console.log("📩 Received:", signal);
-
-            // Обрабатываем только чужие сообщения
             if (signal.sender !== currentUser) {
                 handleRemoteSignal(signal);
-            } else {
-                console.log("✋ Ignoring my own signal");
             }
         });
-    }, (error) => {
-        console.error("❌ STOMP Error:", error);
     });
 
-    /* =========================================
-       4. ЛОГИКА ОТПРАВКИ (Слушаем плеер)
-       ========================================= */
-
-    // Play
-    player.on('play', () => {
-        if (!isRemoteAction) {
-            console.log("👉 Sending PLAY");
-            sendSignal("PLAY", player.currentTime());
-        }
-    });
-
-    // Pause
-    player.on('pause', () => {
-        if (!isRemoteAction) {
-            console.log("👉 Sending PAUSE");
-            sendSignal("PAUSE", player.currentTime());
-        }
-    });
-
-    // Seeked (Перемотка)
+    // --- Sending Logic ---
+    player.on('play', () => { if (!isRemoteAction) sendSignal("PLAY", player.currentTime()); });
+    player.on('pause', () => { if (!isRemoteAction) sendSignal("PAUSE", player.currentTime()); });
     player.on('seeked', () => {
-        if (!isRemoteAction) {
-            // Небольшая защита от частых срабатываний при старте
-            if(player.currentTime() > 0.1) {
-                console.log("👉 Sending SEEK");
-                sendSignal("SEEK", player.currentTime());
-            }
-        }
+        if (!isRemoteAction && player.currentTime() > 0.1) sendSignal("SEEK", player.currentTime());
     });
 
     function sendSignal(action, time) {
         if (stompClient && stompClient.connected) {
-            const payload = {
-                action: action,
-                currentTime: time,
-                fileId: fileId,
-                sender: currentUser // <-- ВАЖНО: Убедитесь, что в Java DTO есть поле sender!
-            };
-            stompClient.send("/app/video.sync/" + roomId, {}, JSON.stringify(payload));
-        } else {
-            console.warn("⚠️ Cannot send signal: WebSocket disconnected");
+            stompClient.send("/app/video.sync/" + roomId, {}, JSON.stringify({
+                action: action, currentTime: time, fileId: fileId, sender: currentUser
+            }));
         }
     }
 
-    /* =========================================
-       5. ЛОГИКА ПОЛУЧЕНИЯ (Управляем плеером)
-       ========================================= */
+    // --- Receiving Logic ---
     function handleRemoteSignal(signal) {
-        // Блокируем отправку своих событий
         isRemoteAction = true;
-        console.log("⚙️ Applying remote action:", signal.action);
+        console.log("⚙️ Remote:", signal.action);
 
         if (signal.action === "PLAY") {
-            // Синхрон времени, если рассинхрон > 0.5 сек
             if (Math.abs(player.currentTime() - signal.currentTime) > 0.5) {
                 player.currentTime(signal.currentTime);
             }
-            player.play().catch(e => console.error("Remote play failed:", e));
-        }
-        else if (signal.action === "PAUSE") {
+            player.play();
+        } else if (signal.action === "PAUSE") {
             player.pause();
-            player.currentTime(signal.currentTime); // При паузе время должно быть точным
-        }
-        else if (signal.action === "SEEK") {
+            player.currentTime(signal.currentTime);
+        } else if (signal.action === "SEEK") {
             player.currentTime(signal.currentTime);
         }
 
-        // Снимаем блокировку через 500мс
-        setTimeout(() => {
-            isRemoteAction = false;
-        }, 500);
+        setTimeout(() => { isRemoteAction = false; }, 500);
     }
 
-    /* =========================================
-       6. УТИЛИТЫ (Копирование ссылки)
-       ========================================= */
+    // --- Utilities ---
     function copyRoomId() {
         navigator.clipboard.writeText(roomId);
         const box = document.getElementById('roomLinkBox');
@@ -292,6 +181,5 @@
     }
 </script>
 
-<!--<div th:replace="~{fragments/notifications :: global-notifications}"></div>-->
 </body>
 </html>

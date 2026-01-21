@@ -1,0 +1,76 @@
+/* Location: src/main/resources/static/css/pages/video.css */
+
+/* --- VIDEO PLAYER --- */
+.video-wrapper {
+    background: #000;
+    border-radius: 16px;
+    overflow: hidden;
+    border: 1px solid var(--glass-border);
+    box-shadow: 0 20px 50px rgba(0,0,0,0.6);
+}
+
+.video-js {
+    width: 100% !important;
+    height: auto;
+    aspect-ratio: 16 / 9;
+}
+
+.participant-list {
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+/* --- SELECT VIDEO PAGE --- */
+.page-header {
+    border-bottom: 1px solid var(--glass-border);
+    padding-bottom: 2rem;
+    margin-bottom: 3rem;
+}
+
+.video-card:hover {
+    border-color: var(--accent);
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.icon-container {
+    height: 120px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0,0,0,0.2);
+    border-radius: 15px;
+    margin-bottom: 1.5rem;
+}
+
+.video-icon {
+    font-size: 4rem;
+    color: var(--accent);
+    filter: drop-shadow(0 0 10px var(--accent-glow));
+    opacity: 0.8;
+}
+
+.back-link {
+    color: var(--accent);
+    text-decoration: none;
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    display: inline-block;
+    margin-bottom: 0.5rem;
+    transition: 0.2s;
+}
+.back-link:hover { color: #ffffff; transform: translateX(-3px); }
+
+/* --- RESPONSIVE / THEATER MODE --- */
+@media (orientation: landscape) and (max-height: 500px) {
+    .header-main-card, .sidebar-section, .sync-info-card { display: none !important; }
+    .video-column { margin-bottom: 0 !important; width: 100% !important; }
+    .video-wrapper { border-radius: 0; border: none; }
+    .container-fluid { padding: 0 !important; }
+}
+
+@media (max-width: 768px) {
+    .header-main-card h4 { font-size: 1.1rem; }
+    .copy-box { font-size: 0.8rem; padding: 6px 12px; }
+}
