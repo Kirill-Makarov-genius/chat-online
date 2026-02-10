@@ -4,10 +4,7 @@ package com.kirillmakarov.chatOnline.controller;
 import com.google.api.services.drive.Drive;
 import com.google.api.services.drive.model.FileList;
 import com.kirillmakarov.chatOnline.dto.RoomDto;
-import com.kirillmakarov.chatOnline.service.CustomUserDetailsService;
-import com.kirillmakarov.chatOnline.service.GoogleDriveService;
-import com.kirillmakarov.chatOnline.service.RoomService;
-import com.kirillmakarov.chatOnline.service.VideoConversionService;
+import com.kirillmakarov.chatOnline.service.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClient;
 import org.springframework.security.oauth2.client.annotation.RegisteredOAuth2AuthorizedClient;
@@ -69,17 +66,30 @@ public class WatchRoomController {
 
     @PostMapping("/create")
     public String createRoom(
-            @RequestParam String fileId,
-            @RequestParam String fileName,
-            @RequestParam String roomName,
-            @RegisteredOAuth2AuthorizedClient("google") OAuth2AuthorizedClient authorizedClient,
+            @RequestParam(required = false) String fileId,
+            @RequestParam(required = false) String fileName,
+            @RequestParam(required = false) String roomName,
+            @RequestParam(required = false) String vkLink,
+            @RegisteredOAuth2AuthorizedClient(registrationId = "google") OAuth2AuthorizedClient authorizedClient,
             Principal principal) throws IOException{
 
+
         String userName = principal.getName();
+        RoomDto roomDto;
 
-        RoomDto roomDto = roomService.createRoom(roomName, fileId, fileName, userName);
+        if(vkLink != null && !vkLink.trim().isEmpty()){
+            String fullVkId = VKvideoParserService.extractIds(vkLink);
+            if (fullVkId == null){
+                return "redirect:/watch/select-video?error=invalid_vk_link";
+            }
+            roomDto = roomService.createRoom(roomName, fullVkId, "VK_VIDEO", userName);
+        }
+        else{
+            roomDto = roomService.createRoom(roomName, fileId, fileName, userName);
 
-        String accessToken = authorizedClient.getAccessToken().getTokenValue();
+            String accessToken = authorizedClient.getAccessToken().getTokenValue();
+        }
+
 
         // We pass the stream and the Room ID to the async service
 //        videoConversionService.convertDriveVideo(roomDto.getId(), fileId, accessToken);

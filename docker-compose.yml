@@ -41,8 +41,8 @@ services:
       - chat-net
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 5s
-      timeout: 5s
+      interval: 10s
+      timeout: 10s
       retries: 5
 
   # ---------------------------------------------
@@ -71,6 +71,9 @@ services:
       KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_LOG_RETENTION_HOURS: 24
+      KAFKA_LOG_RETENTION_BYTES: 1073741824
+      KAFKA_NUM_PARTITIONS: 1
     volumes:
       - kafka_data:/var/lib/kafka/data
     networks:
@@ -105,9 +108,9 @@ services:
     environment:
       SERVER_PORT: 8080
       VIDEO_STORAGE_PATH: /app/uploads
-      DB_URL: jdbc:postgresql://db:5432/chat-online-db
-      DB_USER: ${DB_USER}
-      DB_PASSWORD: ${DB_PASSWORD:-password}
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/chat-online-db
+      SPRING_DATASOURCE_USERNAME: ${DB_USER}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD:-password}
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       MAIL_HOST: ${MAIL_HOST}
       MAIL_PORT: ${MAIL_PORT}

@@ -1,11 +1,10 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 
-<!-- 1. Include Head Fragment (Imports Bootstrap, Fonts, and style.css) -->
+<!-- 1. Include Head Fragment -->
 <head th:replace="~{fragments/head :: common-head('Watch Room', '/css/pages/video.css')}"></head>
 
-
-<!-- Additional Video.js CSS -->
+<!-- Video.js CSS (Only needed for Google Drive) -->
 <link href="https://vjs.zencdn.net/8.10.0/video-js.css" rel="stylesheet" />
 
 <body>
@@ -26,12 +25,11 @@
                 </p>
             </div>
         </div>
-
         <div class="d-flex align-items-center gap-2">
             <span class="badge badge-live px-3 py-2 rounded-pill d-none d-sm-inline-block">LIVE</span>
             <div class="copy-box d-flex align-items-center glass-card border-glass px-3 py-2"
                  style="cursor: pointer; background: rgba(0,0,0,0.2);" onclick="copyRoomId()" id="roomLinkBox">
-                <span class="fw-bold text-accent me-2" th:text="${room.id}" id="roomIdText">ID</span>
+                <span class="fw-bold text-accent me-2" th:text="${room.id}">ID</span>
                 <i class="bi bi-copy"></i>
             </div>
         </div>
@@ -40,11 +38,42 @@
     <div class="row g-3 g-md-4">
         <!-- PLAYER COLUMN -->
         <div class="col-12 col-lg-8 col-xl-9 video-column">
-            <div class="video-wrapper shadow-lg">
-                <video id="mainPlayer" class="video-js vjs-default-skin vjs-big-play-centered w-100"
-                       controls preload="auto">
-                    <source th:src="@{/api/video/{id}(id=${room.fileId})}" type="video/mp4">
-                </video>
+            <div class="video-wrapper shadow-lg position-relative" style="background: #000;">
+
+                <!-- ================================================== -->
+                <!-- OPTION A: VK PLAYER (If fileId has underscore)     -->
+                <!-- ================================================== -->
+                <th:block th:if="${#strings.contains(room.fileId, '_')}">
+                    <!-- We assume fileId is "oid_vid" e.g. "-220754053_456239018" -->
+                    <!-- Extracting parts using strings.arraySplit is tricky in Thymeleaf,
+                         so we just pass fileId directly to vk src which expects `oid` and `id` separately.
+                         Actually, VK URL format is oid=...&id=...
+                         Let's split it using a small inline JS helper or predefined model attributes if possible.
+
+                         BUT since you don't want backend changes, we will parse it in the th:src using #strings
+                    -->
+
+                    <!-- PARSING LOGIC: Splitting ID inside Thymeleaf -->
+                    <iframe id="vk_player_frame"
+                            th:with="ids=${#strings.arraySplit(room.fileId, '_')}"
+                            th:src="@{'https://vk.com/video_ext.php?oid=' + ${ids[0]} + '&id=' + ${ids[1]} + '&hd=2&js_api=1'}"
+                            width="100%" height="100%"
+                            allow="autoplay; encrypted-media; fullscreen; picture-in-picture;"
+                            frameborder="0" allowfullscreen
+                            style="aspect-ratio: 16/9;">
+                    </iframe>
+                </th:block>
+
+                <!-- ================================================== -->
+                <!-- OPTION B: GOOGLE DRIVE (If fileId has NO underscore) -->
+                <!-- ================================================== -->
+                <th:block th:unless="${#strings.contains(room.fileId, '_')}">
+                    <video id="mainPlayer" class="video-js vjs-default-skin vjs-big-play-centered w-100"
+                           controls preload="auto">
+                        <source th:src="@{/api/video/{id}(id=${room.fileId})}" type="video/mp4">
+                    </video>
+                </th:block>
+
             </div>
 
             <!-- SYNC INFO CARD -->
@@ -60,10 +89,10 @@
             </div>
         </div>
 
-        <!-- SIDEBAR: Participants & Invite -->
+        <!-- SIDEBAR (Same as before) -->
         <div class="col-12 col-lg-4 col-xl-3 sidebar-section">
             <div class="glass-card p-4 h-100">
-                <h6 class="text-uppercase small fw-bold text-accent mb-4" style="letter-spacing: 1px;">Participants</h6>
+                <h6 class="text-uppercase small fw-bold text-accent mb-4">Participants</h6>
                 <div class="participant-list mb-4">
                     <div class="d-flex align-items-center mb-3">
                         <div class="rounded-circle bg-success me-3" style="width: 10px; height: 10px; box-shadow: 0 0 10px #10b981;"></div>
@@ -74,7 +103,7 @@
                     </div>
                 </div>
                 <hr class="border-glass my-4">
-                <h6 class="text-uppercase small fw-bold text-accent mb-3" style="letter-spacing: 1px;">Invite Friends</h6>
+                <h6 class="text-uppercase small fw-bold text-accent mb-3">Invite Friends</h6>
                 <p class="small mb-4">Anyone with the Room ID can join your session instantly.</p>
                 <button class="btn-accent w-100 py-3" onclick="copyRoomId()">
                     Copy Link ID <i class="bi bi-link-45deg ms-1"></i>
@@ -84,50 +113,53 @@
     </div>
 </div>
 
-<!-- 2. SCRIPTS -->
+<!-- ============================================= -->
+<!-- SCRIPTS -->
+<!-- ============================================= -->
+
+<!-- 1. Libraries -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<script src="https://vjs.zencdn.net/8.10.0/video.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.1.4/sockjs.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
 
+<!-- 2. Conditional Libraries (VideoJS or VK) -->
+<script th:if="${!#strings.contains(room.fileId, '_')}" src="https://vjs.zencdn.net/8.10.0/video.min.js"></script>
+<script th:if="${#strings.contains(room.fileId, '_')}" src="https://vk.com/js/api/videoplayer.js"></script>
+
+<!-- 3. Global Notifications -->
 <div th:replace="~{fragments/notifications :: global-notifications}"></div>
 
+<!-- 4. MAIN SYNC SCRIPT -->
 <script th:inline="javascript">
 
-    const manualConnection = true;
-    const roomId = [[${room.id}]]
+    // --- COMMON VARIABLES ---
+    const manualConnection = true; // Tell global-socket.js to wait
+    const roomId = [[${room.id}]];
     const fileId = [[${room.fileId}]];
     const currentUser = [[${#authentication.name}]];
+    // Check type based on ID format
+    const isVk = fileId.includes('_');
+
     const initialState = {
         time: [[${room.currentTime}]],
         isPlaying: [[${room.isPlaying}]]
     };
 
     let isRemoteAction = false;
-
-    // --- Video.js Setup ---
-    const player = videojs('mainPlayer', {
-        fluid: true,
-        responsive: true,
-        playbackRates: [0.5, 1, 1.5, 2]
-    });
-
-    player.ready(() => {
-        player.one('loadedmetadata', () => {
-            if (initialState.time > 0) player.currentTime(initialState.time);
-            if (initialState.isPlaying) {
-                player.play().catch(e => console.warn("Autoplay blocked. User interaction needed."));
-            }
-        });
-    });
-
+    let player = null;
 
     document.addEventListener("DOMContentLoaded", function() {
-        // --- Use Global Socket Connection ---
-        connectGlobalSocket(function(client) {
-            // This callback runs AFTER connection is established
-            console.log("📺 Subscribing to Video Room...");
 
+        // --- A. INITIALIZE PLAYER BASED ON TYPE ---
+        if (isVk) {
+            initVkPlayer();
+        } else {
+            initGooglePlayer();
+        }
+
+        // --- B. CONNECT SOCKET ---
+        connectGlobalSocket(function(client) {
+            console.log("📺 Subscribing to Room...");
             client.subscribe('/topic/video/' + roomId, (message) => {
                 const signal = JSON.parse(message.body);
                 if (signal.sender !== currentUser) {
@@ -137,39 +169,122 @@
         });
     });
 
-    // --- Sending Logic ---
-    player.on('play', () => { if (!isRemoteAction) sendSignal("PLAY", player.currentTime()); });
-    player.on('pause', () => { if (!isRemoteAction) sendSignal("PAUSE", player.currentTime()); });
-    player.on('seeked', () => {
-        if (!isRemoteAction && player.currentTime() > 0.1) sendSignal("SEEK", player.currentTime());
-    });
+    // ============================================================
+    // LOGIC 1: GOOGLE DRIVE (Video.js)
+    // ============================================================
+    function initGooglePlayer() {
+        player = videojs('mainPlayer', {
+            fluid: true,
+            responsive: true,
+            playbackRates: [0.5, 1, 1.5, 2]
+        });
 
-    function sendSignal(action, time) {
-        if (stompClient && stompClient.connected) {
+        player.ready(() => {
+            player.one('loadedmetadata', () => {
+                if (initialState.time > 0) player.currentTime(initialState.time);
+                if (initialState.isPlaying) player.play().catch(e => console.warn("Autoplay blocked"));
+            });
+        });
+
+        // Listeners
+        player.on('play', () => { if (!isRemoteAction) sendSignal("PLAY", player.currentTime()); });
+        player.on('pause', () => { if (!isRemoteAction) sendSignal("PAUSE", player.currentTime()); });
+        player.on('seeked', () => {
+            if (!isRemoteAction && player.currentTime() > 0.1) sendSignal("SEEK", player.currentTime());
+        });
+    }
+
+    // ============================================================
+    // LOGIC 2: VK PLAYER (Iframe API)
+    // ============================================================
+    function initVkPlayer() {
+        player = VK.VideoPlayer(document.getElementById('vk_player_frame'));
+
+        // Listeners
+        player.on('state', function(event) {
+            if (isRemoteAction) return;
+            // state: 1=Play, 2=Pause, 0=Finish, 3=Buffering
+            if (event.state === 1) {
+                sendSignal("PLAY");
+            } else if (event.state === 2) {
+                sendSignal("PAUSE");
+            }
+        });
+
+        // Seeking Poll (VK has no seek event)
+        let lastTime = 0;
+        setInterval(() => {
+            if(!player) return;
+            player.getCurrentTime((time) => {
+                if (!isRemoteAction && Math.abs(time - lastTime) > 2) {
+                    sendSignal("SEEK", time);
+                }
+                lastTime = time;
+            });
+        }, 1000);
+    }
+
+    // ============================================================
+    // COMMON: SIGNAL SENDING
+    // ============================================================
+    function sendSignal(action, specificTime) {
+        if (!stompClient || !stompClient.connected) return;
+
+        // Helper to get time safely from either player
+        getTime((currentTime) => {
+            const finalTime = (specificTime !== undefined) ? specificTime : currentTime;
+
             stompClient.send("/app/video.sync/" + roomId, {}, JSON.stringify({
-                action: action, currentTime: time, fileId: fileId, sender: currentUser
+                action: action,
+                currentTime: finalTime,
+                fileId: fileId,
+                sender: currentUser
             }));
+        });
+    }
+
+    function getTime(callback) {
+        if (isVk) {
+            player.getCurrentTime(callback);
+        } else {
+            callback(player.currentTime());
         }
     }
 
-    // --- Receiving Logic ---
+    // ============================================================
+    // COMMON: SIGNAL RECEIVING
+    // ============================================================
     function handleRemoteSignal(signal) {
         isRemoteAction = true;
         console.log("⚙️ Remote:", signal.action);
 
-        if (signal.action === "PLAY") {
-            if (Math.abs(player.currentTime() - signal.currentTime) > 0.5) {
+        if (isVk) {
+            // VK Logic
+            if (signal.action === "PLAY") {
+                player.seek(signal.currentTime);
+                player.play();
+            } else if (signal.action === "PAUSE") {
+                player.pause();
+                player.seek(signal.currentTime);
+            } else if (signal.action === "SEEK") {
+                player.seek(signal.currentTime);
+            }
+        } else {
+            // Google Logic
+            if (signal.action === "PLAY") {
+                if (Math.abs(player.currentTime() - signal.currentTime) > 0.5) {
+                    player.currentTime(signal.currentTime);
+                }
+                player.play();
+            } else if (signal.action === "PAUSE") {
+                player.pause();
+                player.currentTime(signal.currentTime);
+            } else if (signal.action === "SEEK") {
                 player.currentTime(signal.currentTime);
             }
-            player.play();
-        } else if (signal.action === "PAUSE") {
-            player.pause();
-            player.currentTime(signal.currentTime);
-        } else if (signal.action === "SEEK") {
-            player.currentTime(signal.currentTime);
         }
 
-        setTimeout(() => { isRemoteAction = false; }, 500);
+        setTimeout(() => { isRemoteAction = false; }, 800);
     }
 
     // --- Utilities ---

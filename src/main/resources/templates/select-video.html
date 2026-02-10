@@ -30,7 +30,19 @@
 
         <!-- Video Selection Grid -->
         <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
-
+            <div class="glass-card p-4 mb-5">
+                <h4 class="text-white mb-3"><i class="bi bi-link-45deg text-accent"></i> Paste VK Link</h4>
+                <form th:action="@{/watch/create}" method="post">
+                    <div class="input-group">
+                        <input type="text" name="vkLink" class="form-control form-control-dark"
+                               placeholder="e.g. https://vk.com/video-220754053_456239018" required>
+                        <!-- Room name is required by controller -->
+                        <input type="text" name="roomName" class="form-control form-control-dark"
+                               placeholder="Room Name" style="max-width: 200px;" required>
+                        <button class="btn btn-accent">Watch</button>
+                    </div>
+                </form>
+            </div>
             <!-- Loop: Active Files -->
             <div class="col" th:each="file : ${files}">
                 <div class="glass-card video-card h-100 p-4">
